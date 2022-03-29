@@ -460,6 +460,7 @@ int ftsdc010_mmc_bind(struct udevice *dev)
 
 static const struct udevice_id ftsdc010_mmc_ids[] = {
 	{ .compatible = "andestech,atfsdc010" },
+	{ .compatible = "andestech,atfsdc010g" },
 	{ }
 };
 
