@@ -76,4 +76,12 @@ int cache_enable(struct udevice *dev);
  * Return: 0 if OK, -ve on error
  */
 int cache_disable(struct udevice *dev);
+
+/**
+ * cache_wbinval() - Flush and invalidate cache
+ *
+ * @dev:	Device to check (UCLASS_CACHE)
+ * @return 0 if OK, -ve on error
+ */
+int cache_wbinval(struct udevice *dev);
 #endif
