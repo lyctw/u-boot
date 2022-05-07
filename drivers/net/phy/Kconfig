@@ -235,6 +235,9 @@ config RTL8211F_PHY_FORCE_EEE_RXC_ON
 	  Default n, which means that the PHY state is not changed. To work
 	  around the issues, change this setting to y.
 
+config PHY_RPC
+	bool  "RPCOM Ethernet PHYs support"
+
 config PHY_SMSC
 	bool  "Microchip(SMSC) Ethernet PHYs support"
 

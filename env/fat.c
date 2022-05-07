@@ -31,6 +31,10 @@
 # endif
 #endif
 
+#ifdef FAT_ENV_DEV_PART_DYNMIC
+char * fat_get_env_file_name_dynamic(void);
+#endif
+
 #ifdef CMD_SAVEENV
 static int env_fat_save(void)
 {
@@ -61,9 +65,15 @@ static int env_fat_save(void)
 		       CONFIG_ENV_FAT_INTERFACE, dev, part);
 		return 1;
 	}
-
+	#ifdef FAT_ENV_DEV_PART_DYNMIC
+	char *env_file_name = fat_get_env_file_name_dynamic();
+	err = file_fat_write(env_file_name, (void *)&env_new, 0, sizeof(env_t),
+			     &size);
+	#else 
 	err = file_fat_write(CONFIG_ENV_FAT_FILE, (void *)&env_new, 0, sizeof(env_t),
 			     &size);
+	#endif
+	
 	if (err == -1) {
 		/*
 		 * This printf is embedded in the messages from env_save that
@@ -109,7 +119,13 @@ static int env_fat_load(void)
 		goto err_env_relocate;
 	}
 
+	#ifdef FAT_ENV_DEV_PART_DYNMIC
+	char *env_file_name = fat_get_env_file_name_dynamic();
+	err = file_fat_read(env_file_name, buf, CONFIG_ENV_SIZE);
+	#else
 	err = file_fat_read(CONFIG_ENV_FAT_FILE, buf, CONFIG_ENV_SIZE);
+	#endif
+
 	if (err == -1) {
 		/*
 		 * This printf is embedded in the messages from env_save that

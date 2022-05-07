@@ -63,10 +63,10 @@
  * Physical Memory Map
  */
 #define PHYS_SDRAM_0	0x00000000		/* SDRAM Bank #1 */
-#define PHYS_SDRAM_1	\
-	(PHYS_SDRAM_0 + PHYS_SDRAM_0_SIZE)	/* SDRAM Bank #2 */
-#define PHYS_SDRAM_0_SIZE	0x20000000	/* 512 MB */
-#define PHYS_SDRAM_1_SIZE	0x20000000	/* 512 MB */
+//#define PHYS_SDRAM_1	\
+//	(PHYS_SDRAM_0 + PHYS_SDRAM_0_SIZE)	/* SDRAM Bank #2 */
+#define PHYS_SDRAM_0_SIZE	0x8000000	/* 512 MB */
+//#define PHYS_SDRAM_1_SIZE	0x20000000	/* 512 MB */
 #define CONFIG_SYS_SDRAM_BASE	PHYS_SDRAM_0
 
 /*
@@ -76,10 +76,12 @@
 #ifndef CONFIG_DM_SERIAL
 #define CONFIG_SYS_NS16550_REG_SIZE	-4
 #endif
-#define CONFIG_SYS_NS16550_CLK		19660800
+#define CONFIG_SYS_NS16550_CLK		25000000
+
+#define CONFIG_SYS_NS16550_MEM32           /*yangguang: define CONFIG_SYS_NS16550_MEM32*/
 
 /* Init Stack Pointer */
-#define CONFIG_SYS_INIT_SP_ADDR		(CONFIG_SYS_SDRAM_BASE + 0x1000000 - \
+#define CONFIG_SYS_INIT_SP_ADDR		(CONFIG_SYS_SDRAM_BASE + 0x80120000 - \
 					GENERATED_GBL_DATA_SIZE)
 
 /*
@@ -159,6 +161,12 @@
 				"scriptaddr=0x01f00000\0" \
 				"fdt_addr_r=0x02000000\0" \
 				"ramdisk_addr_r=0x02800000\0" \
+				"ipaddr=10.100.228.244\0" \
+				"serverip=10.100.228.242\0" \
+				"bootm_size=0x2000000\0" \
+				"fdt_high=0x1f00000\0" \
+                                "bootcmd=tftp 0x600000 bootm-bbl.bin;"\
+                                "tftp 0x2000000 k510.dtb;bootm 0x600000 - 0x2000000\0" \
 				BOOTENV
 
 #endif /* __CONFIG_H */

@@ -1505,7 +1505,7 @@ static const u8 multipliers[] = {
 	13,
 	15,
 	20,
-	25,
+	20,
 	30,
 	35,
 	40,
@@ -2475,6 +2475,7 @@ static int mmc_startup(struct mmc *mmc)
 	mult = multipliers[((cmd.response[0] >> 3) & 0xf)];
 
 	mmc->legacy_speed = freq * mult;
+        pr_debug("mmc_startup: mmc->legacy_speed=%d \n", mmc->legacy_speed);
 	mmc_select_mode(mmc, MMC_LEGACY);
 
 	mmc->dsr_imp = ((cmd.response[1] >> 12) & 0x1);

@@ -1,0 +1,12 @@
+k510_evb_lp3 BOARD
+M:	Guang Yang <yangguang@canaan-creative.com>
+S:	Maintained
+F:	board/Canaan/k510_evb_lp3/
+F:	arch/riscv/dts/k510_evb_lp3_v1_0.dts
+F:	arch/riscv/dts/k510_evb_lp3_v1_1.dts
+F:	include/configs/k510_evb_lp3_v1_0.h
+F:	include/configs/k510_evb_lp3_v1_1.h
+F:	configs/k510_evb_lp3_v1_0_sdcard_defconfig
+F:	configs/k510_evb_lp3_v1_1_sdcard_defconfig
+F:	arch/riscv/dts/k510_evb_lp3_v1_0.dts
+F:	arch/riscv/dts/k510_evb_lp3_v1_1.dts

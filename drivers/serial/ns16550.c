@@ -139,11 +139,24 @@ static u32 ns16550_getfcr(NS16550_t port)
 }
 #endif
 
+/*
 int ns16550_calc_divisor(NS16550_t port, int clock, int baudrate)
 {
 	const unsigned int mode_x_div = 16;
 
 	return DIV_ROUND_CLOSEST(clock, mode_x_div * baudrate);
+}
+*/
+unsigned int ns16550_calc_divisor(NS16550_t port, int clock, int baudrate, unsigned int *frac)
+{
+        unsigned int quot, rem, base_baud = baudrate * 16;
+
+        quot = clock / base_baud;
+        rem = clock % base_baud; 
+        *frac = DIV_ROUND_CLOSEST(rem << 4, base_baud);
+
+        return quot;
+
 }
 
 static void NS16550_setbrg(NS16550_t com_port, int baud_divisor)
@@ -346,10 +359,12 @@ static int ns16550_serial_setbrg(struct udevice *dev, int baudrate)
 {
 	struct NS16550 *const com_port = dev_get_priv(dev);
 	struct ns16550_platdata *plat = com_port->plat;
-	int clock_divisor;
+	unsigned int clock_divisor;
+        unsigned int frac;
 
-	clock_divisor = ns16550_calc_divisor(com_port, plat->clock, baudrate);
+	clock_divisor = ns16550_calc_divisor(com_port, plat->clock, baudrate, &frac);
 
+        serial_out(frac, (&com_port)+0xC0);
 	NS16550_setbrg(com_port, clock_divisor);
 
 	return 0;

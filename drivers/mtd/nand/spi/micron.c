@@ -93,6 +93,16 @@ static int mt29f2g01abagd_ecc_get_status(struct spinand_device *spinand,
 }
 
 static const struct spinand_info micron_spinand_table[] = {
+        SPINAND_INFO("MT29F1G01ABBGD", 0x25,
+                     NAND_MEMORG(1, 2048, 128, 64, 2048, 2, 1, 1),
+                     NAND_ECCREQ(8, 512),
+                     SPINAND_INFO_OP_VARIANTS(&read_cache_variants,
+                                              &write_cache_variants,
+                                              &update_cache_variants),
+                     0,
+                     SPINAND_ECCINFO(&mt29f2g01abagd_ooblayout,
+                                     mt29f2g01abagd_ecc_get_status)),
+
 	SPINAND_INFO("MT29F2G01ABAGD", 0x24,
 		     NAND_MEMORG(1, 2048, 128, 64, 2048, 2, 1, 1),
 		     NAND_ECCREQ(8, 512),
@@ -104,6 +114,7 @@ static const struct spinand_info micron_spinand_table[] = {
 				     mt29f2g01abagd_ecc_get_status)),
 };
 
+#if 0
 static int micron_spinand_detect(struct spinand_device *spinand)
 {
 	u8 *id = spinand->id.data;
@@ -123,6 +134,36 @@ static int micron_spinand_detect(struct spinand_device *spinand)
 
 	return 1;
 }
+#endif
+
+static int micron_spinand_detect(struct spinand_device *spinand)
+{
+	u8 *id = spinand->id.data;
+        u16 did;
+	int ret;
+
+        printf("micron_spinand_detect: %x %x %x %x\n", id[0], id[1], id[2], id[3]);
+
+        if (id[0] == SPINAND_MFR_MICRON){
+                if (id[1] == 0x25)
+                    did = id[1];
+                else
+                    did = (id[1] << 8) + id[2];
+        }
+        else if (id[0] == 0 && id[1] == SPINAND_MFR_MICRON)
+                did = id[2];
+        else
+                return 0;
+
+
+	ret = spinand_match_and_init(spinand, micron_spinand_table,
+				     ARRAY_SIZE(micron_spinand_table), did);
+	if (ret)
+		return ret;
+
+	return 1;
+}
+
 
 static const struct spinand_manufacturer_ops micron_spinand_manuf_ops = {
 	.detect = micron_spinand_detect,

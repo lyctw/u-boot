@@ -21,6 +21,11 @@
 #define PRINTF(fmt,args...)
 #endif
 
+#ifdef FAT_ENV_DEV_PART_DYNMIC
+char * fat_get_env_dev_and_part_dynamic(void );
+#endif 
+
+
 /* Check all partition types */
 #define PART_TYPE_ALL		-1
 
@@ -487,6 +492,12 @@ int blk_get_device_part_str(const char *ifname, const char *dev_part_str,
 		return 0;
 	}
 #endif
+	
+	#ifdef FAT_ENV_DEV_PART_DYNMIC
+	if(!dev_part_str || !strcmp(dev_part_str, "auto"))	{
+		dev_part_str = fat_get_env_dev_and_part_dynamic();
+	}
+	#endif 
 
 	/* If no dev_part_str, use bootdevice environment variable */
 	if (!dev_part_str || !strlen(dev_part_str) ||

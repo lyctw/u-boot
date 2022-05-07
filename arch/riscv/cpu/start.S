@@ -101,15 +101,25 @@ call_board_init_f_0:
 	mv	sp, a0
 #endif
 
+        /* Yangguang: Enable cache */
+//        csrr t1, mcache_ctl
+//        ori t0, t1, 0x3
+//        csrw mcache_ctl, t0
+        
+
 #ifndef CONFIG_XIP
 	/*
 	 * Pick hart to initialize global data and run U-Boot. The other harts
 	 * wait for initialization to complete.
 	 */
-	la	t0, hart_lottery
-	li	s2, 1
-	amoswap.w s2, t1, 0(t0)
-	bnez	s2, wait_for_gd_init
+//	la	t0, hart_lottery
+//	li	s2, 1
+//	amoswap.w s2, t1, 0(t0)
+//	bnez	s2, wait_for_gd_init
+        /*yangguang: chose hart 0 as boot hart*/
+        csrr    s2, mhartid
+        bnez    s2, wait_for_gd_init
+
 #else
 	bnez	tp, secondary_hart_loop
 #endif

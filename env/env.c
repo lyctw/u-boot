@@ -4,6 +4,7 @@
  * Written by Simon Glass <sjg@chromium.org>
  */
 
+#define DEBUG 1
 #include <common.h>
 #include <env.h>
 #include <env_internal.h>
@@ -82,6 +83,9 @@ static enum env_location env_locations[] = {
 #endif
 #ifdef CONFIG_ENV_IS_IN_UBI
 	ENVL_UBI,
+#endif
+#ifdef CONFIG_ENV_IS_IN_SPI_NAND
+        ENVL_SPINAND,
 #endif
 #ifdef CONFIG_ENV_IS_NOWHERE
 	ENVL_NOWHERE,

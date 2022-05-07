@@ -163,4 +163,8 @@ struct ustat {
 #define DECLARE_BITMAP(name, bits) \
 	unsigned long name[BITS_TO_LONGS(bits)]
 
+typedef int32_t                intptr_t;	
+typedef unsigned long long int uint64_t;
+
+
 #endif /* _LINUX_TYPES_H */

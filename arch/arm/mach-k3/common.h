@@ -16,4 +16,3 @@
 
 void setup_k3_mpu_regions(void);
 int early_console_init(void);
-void disable_linefill_optimization(void);

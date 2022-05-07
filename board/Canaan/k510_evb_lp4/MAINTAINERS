@@ -1,0 +1,6 @@
+k510_evb_lp4 BOARD
+M:	Guang Yang <yangguang@canaan-creative.com>
+S:	Maintained
+F:	board/Canaan/k510_evb_lp4/
+F:	include/configs/k510_evb_lp4.h
+F:	arch/riscv/dts/k510_evb_lp4.dts

@@ -1,0 +1,38 @@
+if TARGET_K510_EVB_LP4
+
+config SYS_CPU
+	default "ax25"
+
+config SYS_BOARD
+	default "k510_evb_lp4"
+
+config SYS_VENDOR
+	default "Canaan"
+
+config SYS_SOC
+	default "k510"
+
+config SYS_CONFIG_NAME
+	default "k510_evb_lp4"
+
+config ENV_SIZE
+	default 0x2000 if ENV_IS_IN_SPI_FLASH
+
+config ENV_OFFSET
+	default 0x140000 if ENV_IS_IN_SPI_FLASH
+
+config SPL_TEXT_BASE
+	default 0x800000
+
+config SPL_OPENSBI_LOAD_ADDR
+	default 0x01000000
+
+config BOARD_SPECIFIC_OPTIONS # dummy
+	def_bool y
+	select RISCV_NDS
+	select SUPPORT_SPL
+	imply SMP
+	imply SPL_RAM_SUPPORT
+	imply SPL_RAM_DEVICE
+
+endif

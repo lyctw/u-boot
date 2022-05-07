@@ -39,11 +39,20 @@
 		   SPI_MEM_OP_NO_DUMMY,					\
 		   SPI_MEM_OP_NO_DATA)
 
+
 #define SPINAND_READID_OP(ndummy, buf, len)				\
 	SPI_MEM_OP(SPI_MEM_OP_CMD(0x9f, 1),				\
 		   SPI_MEM_OP_NO_ADDR,					\
 		   SPI_MEM_OP_DUMMY(ndummy, 1),				\
 		   SPI_MEM_OP_DATA_IN(len, buf, 1))
+
+/*
+#define SPINAND_READID_OP(addr, addr_len, buf, len)                     \
+        SPI_MEM_OP(SPI_MEM_OP_CMD(0x9f, 1),                             \
+                   SPI_MEM_OP_ADDR(addr_len, addr, 1),                                  \
+                   SPI_MEM_OP_NO_DUMMY,                                 \
+                   SPI_MEM_OP_DATA_IN(len, buf, 1))
+*/
 
 #define SPINAND_SET_FEATURE_OP(reg, valptr)				\
 	SPI_MEM_OP(SPI_MEM_OP_CMD(0x1f, 1),				\
@@ -116,6 +125,13 @@
 		   SPI_MEM_OP_ADDR(2, addr, 1),				\
 		   SPI_MEM_OP_NO_DUMMY,					\
 		   SPI_MEM_OP_DATA_OUT(len, buf, 4))
+
+#define SPINAND_PROG_LOAD_QUADIO_OP(addr, buf, len)                     \
+    SPI_MEM_OP(SPI_MEM_OP_CMD(0x72, 1),                     \
+           SPI_MEM_OP_ADDR(2, addr, 4),                                     \
+           SPI_MEM_OP_NO_DUMMY,                                             \
+           SPI_MEM_OP_DATA_OUT(len, buf, 4))
+
 
 /**
  * Standard SPI NAND flash commands
@@ -204,6 +220,7 @@ struct spinand_manufacturer {
 extern const struct spinand_manufacturer gigadevice_spinand_manufacturer;
 extern const struct spinand_manufacturer macronix_spinand_manufacturer;
 extern const struct spinand_manufacturer micron_spinand_manufacturer;
+extern const struct spinand_manufacturer toshiba_spinand_manufacturer;
 extern const struct spinand_manufacturer winbond_spinand_manufacturer;
 
 /**

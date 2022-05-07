@@ -11,6 +11,21 @@ choice
 config TARGET_AX25_AE350
 	bool "Support ax25-ae350"
 
+config TARGET_K510_EVB_LP3_V1_0
+	bool "Support K510 EVB LP3 board v1.0"
+
+config TARGET_K510_EVB_LP3_V1_1
+	bool "Support K510 EVB LP3 board v1.1"
+
+config TARGET_K510_CRB_LP3_V0_1
+	bool "Support K510 CRB LP3 board v0.1"
+
+config TARGET_K510_CRB_LP3_V1_2
+	bool "Support K510 CORE LP3 board v1.2"
+	
+config TARGET_K510_EVB_LP4
+	bool "Support K510 EVB LP4 board"
+
 config TARGET_MICROCHIP_ICICLE
 	bool "Support Microchip PolarFire-SoC Icicle Board"
 
@@ -53,6 +68,9 @@ source "board/AndesTech/ax25-ae350/Kconfig"
 source "board/emulation/qemu-riscv/Kconfig"
 source "board/microchip/mpfs_icicle/Kconfig"
 source "board/sifive/fu540/Kconfig"
+source "board/Canaan/k510_evb_lp3/Kconfig"
+source "board/Canaan/k510_crb_lp3/Kconfig"
+source "board/Canaan/k510_evb_lp4/Kconfig"
 
 # platform-specific options below
 source "arch/riscv/cpu/ax25/Kconfig"
@@ -137,6 +155,14 @@ config RISCV_ISA_C
 	  Adds "C" to the ISA subsets that the toolchain is allowed to emit
 	  when building U-Boot, which results in compressed instructions in the
 	  U-Boot binary.
+
+config RISCV_ISA_F
+        bool "Emit Floating-point instructions"
+        default n
+        help
+          Adds "F" to the ISA subsets that the toolchain is allowed to emit
+          when building U-Boot, which results in Single-Precision and Double-
+          Precision in U-Boot binary.
 
 config RISCV_ISA_A
 	def_bool y

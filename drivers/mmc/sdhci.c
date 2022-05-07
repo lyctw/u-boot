@@ -819,8 +819,8 @@ int sdhci_setup_cfg(struct mmc_config *cfg, struct sdhci_host *host,
 
 	/* Since Host Controller Version3.0 */
 	if (SDHCI_GET_VERSION(host) >= SDHCI_SPEC_300) {
-		if (!(caps & SDHCI_CAN_DO_8BIT))
-			cfg->host_caps &= ~MMC_MODE_8BIT;
+//		if (!(caps & SDHCI_CAN_DO_8BIT))
+//			cfg->host_caps &= ~MMC_MODE_8BIT;
 	}
 
 	if (host->quirks & SDHCI_QUIRK_BROKEN_HISPD_MODE) {

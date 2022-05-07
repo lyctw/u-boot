@@ -39,7 +39,7 @@
 #include <linux/mii.h>
 #include <asm/io.h>
 #include <asm/dma-mapping.h>
-#include <asm/arch/clk.h>
+#include <asm/arch-generic/clk.h>
 #include <linux/errno.h>
 
 #include "macb.h"
@@ -612,6 +612,7 @@ static int macb_phy_init(struct macb_device *macb, const char *name)
 	}
 
 	phy_config(macb->phydev);
+	phy_startup(macb->phydev);
 #endif
 
 	status = macb_mdio_read(macb, macb->phy_addr, MII_BMSR);
@@ -640,7 +641,11 @@ static int macb_phy_init(struct macb_device *macb, const char *name)
 	}
 
 	/* First check for GMAC and that it is GiB capable */
-	if (gem_is_gigabit_capable(macb)) {
+//	if (gem_is_gigabit_capable(macb)) {a
+        /*yangguang: skip it if phy interface type is MII or RMII*/
+	if (gem_is_gigabit_capable(macb) && 
+            macb->phy_interface != PHY_INTERFACE_MODE_MII &&
+            macb->phy_interface != PHY_INTERFACE_MODE_RMII) {
 		lpa = macb_mdio_read(macb, macb->phy_addr, MII_STAT1000);
 
 		if (lpa & (LPA_1000FULL | LPA_1000HALF | LPA_1000XFULL |
@@ -1225,6 +1230,8 @@ static int macb_eth_probe(struct udevice *dev)
 	struct eth_pdata *pdata = dev_get_platdata(dev);
 	struct macb_device *macb = dev_get_priv(dev);
 	const char *phy_mode;
+	unsigned int *addr;
+	unsigned int reg;
 	int ret;
 
 	phy_mode = fdt_getprop(gd->fdt_blob, dev_of_offset(dev), "phy-mode",
@@ -1235,6 +1242,39 @@ static int macb_eth_probe(struct udevice *dev)
 		debug("%s: Invalid PHY interface '%s'\n", __func__, phy_mode);
 		return -EINVAL;
 	}
+
+	addr = (unsigned int *)(0x97001000 + 0x104);
+	reg = readl(addr);
+    if(macb->phy_interface == PHY_INTERFACE_MODE_MII)
+	{
+		reg |= (1 << 6) | (1 << 27);    /* EMAC_TRX_CLK_CFG.emac_refclk_en = 1 enable emac_phy_refclk*/
+		reg |= (1 << 9) | (1 << 30);    /* EMAC_TRX_CLK_CFG.emac_refclk_oen = 1  Reference Clock input enable*/
+		reg &= ~(1 << 7);
+		reg |= (1 << 28);               /* EMAC host controller Tx Clock source selection in MII or RGMII mode. */
+		reg |= (1 << 8) | (1 << 29);    /* EMAC_TRX_CLK_CFG.emac_txclk_sel = 0   using the Reference Clock in RMII mode*/
+	}
+	else if(macb->phy_interface == PHY_INTERFACE_MODE_RMII)
+	{
+		reg |= (1 << 6) | (1 << 27);    /* EMAC_TRX_CLK_CFG.emac_refclk_en = 1 enable emac_phy_refclk*/
+		reg |= (1 << 9) | (1 << 30);    /* EMAC_TRX_CLK_CFG.emac_refclk_oen = 1  Reference Clock input enable*/
+		reg &= ~(1 << 8);
+		reg |= 1 << 29;                 /* EMAC_TRX_CLK_CFG.emac_txclk_sel = 0   using the Reference Clock in RMII mode*/
+	}
+	else if(macb->phy_interface == PHY_INTERFACE_MODE_RGMII)
+	{
+		reg |= (1 << 6) | (1 << 27);    /* EMAC_TRX_CLK_CFG.emac_refclk_en = 1 enable emac_phy_refclk*/
+		reg |= (1 << 9) | (1 << 30);    /* EMAC_TRX_CLK_CFG.emac_refclk_oen = 1  Reference Clock input enable*/
+
+		reg |= (1 << 7) | (1 << 28);    /* EMAC host controller Tx Clock source selection in MII or RGMII mode. */
+		reg |= (1 << 8) | (1 << 29);    /* EMAC_TRX_CLK_CFG.emac_txclk_sel = 0   using the Reference Clock in RMII mode*/
+		reg |= (1 << 2) | (1 << 23);    /* Txdly 2ns */
+	}
+	else
+	{
+		debug("%s: Invalid PHY interface (%d)\n", __func__, macb->phy_interface);
+		return -EINVAL;
+	}
+	writel(reg, addr);
 
 	macb->regs = (void *)pdata->iobase;
 

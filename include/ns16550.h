@@ -224,7 +224,8 @@ void NS16550_reinit(NS16550_t com_port, int baud_divisor);
  * @baudrate:	Required baud rate
  * @return baud rate divisor that should be used
  */
-int ns16550_calc_divisor(NS16550_t port, int clock, int baudrate);
+//int ns16550_calc_divisor(NS16550_t port, int clock, int baudrate);
+unsigned int ns16550_calc_divisor(NS16550_t port, int clock, int baudrate, unsigned int *frac);
 
 /**
  * ns16550_serial_ofdata_to_platdata() - convert DT to platform data
