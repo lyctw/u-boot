@@ -290,6 +290,11 @@ char * fat_get_env_file_name_dynamic(void)
         //printf("boot_media=%x %s\n", boot_media ,env_file_name);
         return env_file_name;
 }
+//CONFIG_LAST_STAGE_INIT
+int last_stage_init(void)
+{
+	run_command("mii write 0 0x1e 0xa003; mii write  0 0x1f 0x01 ;", 0);
+}
 
 #endif
 
