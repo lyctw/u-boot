@@ -70,7 +70,8 @@ void sysctl_enable_all_leaf_clk(void)
         freq = sysctl_clk_get_leaf_freq(SYSCTL_CLK_GNNE_AXI);
         printf("GNNE AXI clock freq changed: %d \r\n", freq);
 
-        writel(0x0f000f00,(void *)0x97001000);
+        writel(0x0f000f00,(void *)0x97001000);//792M
+		//writel(0x0f000f60,(void *)0x97001000);//396M
         // writel(0x0f000f10,(void *)0x97001000);		//726M
 
         printf("CPU freq %d MHZ\n", sysctl_clk_get_leaf_freq(SYSCTL_CLK_AX25M_SRC) / 1000000);
@@ -296,6 +297,25 @@ int last_stage_init(void)
 	run_command("mii write 0 0x1e 0xa003; mii write  0 0x1f 0x01 ;", 0);
 }
 
+#ifdef CONFIG_RESET_PHY_R 
+#include "gpio.h"
+#include "muxpin.h"
+void	reset_phy     (void)
+{
+
+	muxpin_set_function(31, FUNC_GPIO20);
+	gpio_set_drive_mode(20, GPIO_DM_OUTPUT);//GPIO_DM_OUTPUT
+	gpio_set_pin(20, GPIO_PV_LOW);//GPIO_PV_LOW
+	mdelay(20);
+	gpio_set_pin(20, GPIO_PV_HIGH);//GPIO_PV_HIGH
+	udelay(10);
+	gpio_set_pin(20, GPIO_PV_LOW);//GPIO_PV_LOW
+	mdelay(20);
+	gpio_set_pin(20, GPIO_PV_HIGH);//GPIO_PV_HIGH
+	mdelay(200);
+	return 0;
+}
+#endif 
 #endif
 
 

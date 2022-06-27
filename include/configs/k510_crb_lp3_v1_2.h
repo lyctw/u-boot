@@ -169,5 +169,6 @@
                                 "tftp 0x2000000 k510.dtb;bootm 0x600000 - 0x2000000\0" \
 				BOOTENV
 #define FAT_ENV_DEV_PART_DYNMIC
-#define CONFIG_BOARD_LATE_INIT
+#define CONFIG_BOARD_LATE_INIT 
+#define CONFIG_RESET_PHY_R
 #endif /* __CONFIG_H */
