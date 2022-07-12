@@ -2259,7 +2259,7 @@ void dsi_init_1080x1920()
         int VACT = 1920;
         int HSA = 20;
         int HBP = 20;
-        int HFP = 220;
+        int HFP = 134;
 
         int VSA = 5;
         int VBP = 8;

@@ -1090,7 +1090,7 @@ static int VO_TEST_BRINGUP_DSI_GetCtl(VO_CTL_S *voCtl)
     dispCtl->Disp_en = TRUE;
     dispCtl->SyncMode = VO_SYSTEM_MODE_1080x1920x30P;
 #if 1
-    dispCtl->total_size.Width = 1340 ;//1340;  1125 
+    dispCtl->total_size.Width = 1254;//1340 ;//1340;  1125 
     dispCtl->total_size.Height = 1958;//1958;//1938???  2200
     dispCtl->disp_start.Width = (5+20+20+1);  // 46
     dispCtl->disp_stop.Width = 1080 +(5+20+20+1);
