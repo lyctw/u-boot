@@ -22,13 +22,9 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef _DISPLAY_HARDWARE_INIT_H_
-#define _DISPLAY_HARDWARE_INIT_H_
+#ifndef _LT9611_H_
+#define _LT9611_H_
 
-
-void display_gpio_reset(void);
-void display_gpio_init(void);
-void display_switch_lcd_gpio(void);
-void display_switch_hdmi_gpio(void);
+int lt9611_get_hpd_state(void);
 
 #endif

@@ -88,7 +88,27 @@ void display_gpio_poweron(void)
 #endif
 }
 
+void lt9611_reset(void)
+{
+    gpio_set_pin(15, GPIO_PV_LOW);
+    msleep(100);
+    gpio_set_pin(15, GPIO_PV_HIGH);
+}
+
 // gpio init 
+int mipi_select_value = 0;
+void display_switch_lcd_gpio(void)
+{
+    gpio_set_drive_mode(21,GPIO_DM_OUTPUT);
+    gpio_set_pin(21, mipi_select_value);
+}
+
+void display_switch_hdmi_gpio(void)
+{
+    gpio_set_drive_mode(21,GPIO_DM_OUTPUT);
+    gpio_set_pin(21, !mipi_select_value);
+}
+
 void display_gpio_init(void)
 {
 
@@ -103,6 +123,20 @@ void display_gpio_init(void)
 #endif
 
 #ifdef CONFIG_TARGET_K510_CRB_LP3_V1_2
+
+    muxpin_set_function(32, FUNC_GPIO25);
+    gpio_set_drive_mode(25,GPIO_DM_OUTPUT);
+    gpio_set_pin(25, GPIO_PV_LOW);
+
+    muxpin_set_function(97, FUNC_GPIO15);
+    gpio_set_drive_mode(15,GPIO_DM_OUTPUT);
+    gpio_set_pin(15, GPIO_PV_HIGH);
+
+    muxpin_set_function(34, FUNC_GPIO21);
+    gpio_set_drive_mode(21,GPIO_DM_INPUT);
+    mipi_select_value = gpio_get_pin(21);
+    msleep(10);
+
     muxpin_set_function(78, FUNC_GPIO19);
     gpio_set_drive_mode(19,GPIO_DM_OUTPUT);
 
@@ -111,11 +145,15 @@ void display_gpio_init(void)
 
     muxpin_set_function(49, FUNC_GPIO23);
     gpio_set_drive_mode(23,GPIO_DM_OUTPUT);
+
+    lt9611_reset();
+
     camera_power_on();
 
     display_gpio_reset();
 
     display_gpio_poweron();
+
 #endif
 
 }

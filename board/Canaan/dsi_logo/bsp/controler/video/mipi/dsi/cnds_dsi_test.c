@@ -2253,6 +2253,12 @@ void dsi_prepare(void)
         */
 }
 
+static int32_t lcd_id = 0;
+int32_t get_lcd_id(void)
+{
+    return lcd_id;
+}
+
 void dsi_init_1080x1920()
 {
         int HACT = 1080;
@@ -2273,7 +2279,6 @@ void dsi_init_1080x1920()
         DsiRegWr(DPI_IRQ_EN_OFFSET, 0); // enable dpi overflow int
         msleep(100);
 
-        int32_t lcd_id = 0;
         lcd_id = hx8399_read_id();
         if (lcd_id == -1) {
                 sysctl_reset(SYSCTL_RESET_DSI);

@@ -31,8 +31,10 @@
 #include "hw_dev/inc/dev_hw.h"
 
 #include "hw_dev/inc/display_hardware_init.h"
+#include "hw_dev/inc/lt9611.h"
 
 #include "interrupt.h"
+#include "env.h"
 
 /******************************************************************************
  *  CORE com*
@@ -1090,7 +1092,7 @@ static int VO_TEST_BRINGUP_DSI_GetCtl(VO_CTL_S *voCtl)
     dispCtl->Disp_en = TRUE;
     dispCtl->SyncMode = VO_SYSTEM_MODE_1080x1920x30P;
 #if 1
-    dispCtl->total_size.Width = 1254;//1340 ;//1340;  1125 
+    dispCtl->total_size.Width = 1254;//1340;  1125 
     dispCtl->total_size.Height = 1958;//1958;//1938???  2200
     dispCtl->disp_start.Width = (5+20+20+1);  // 46
     dispCtl->disp_stop.Width = 1080 +(5+20+20+1);
@@ -2923,6 +2925,8 @@ static int dsi_init(VO_TEST_CASE_E voTestCase)
 */
 int VO_TEST_VideoOut(VO_TEST_CASE_E voTestCase)
 {
+    int hpd_state = 0;
+    int lcd_id = 0;
     VO_INFO_S voInfo;
 
     //set vo irq
@@ -2942,8 +2946,19 @@ int VO_TEST_VideoOut(VO_TEST_CASE_E voTestCase)
 
     //
     //MS_API_VO_WriteBackSet(640,480);
-    VO_TEST_Start();
-
+    hpd_state = lt9611_get_hpd_state();
+    lcd_id = get_lcd_id();
+    if (hpd_state) {
+        set_bootcmd("k510-hdmi.dtb");
+        display_switch_hdmi_gpio();
+    } else if (lcd_id == 0x0C9983 || lcd_id == 0x1C9983) {
+        set_bootcmd("k510.dtb");
+        display_switch_lcd_gpio();
+        //VO_TEST_Start();
+    } else {
+        set_bootcmd("k510-hdmi.dtb");
+        display_switch_hdmi_gpio();
+    }
 
 #ifndef _SIMU    
     //remap

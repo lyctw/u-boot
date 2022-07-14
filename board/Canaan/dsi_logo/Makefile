@@ -21,6 +21,7 @@ obj-y	:=  \
  bsp/controler/i2c.o \
  test/log/hw_dev/src/ext_ctl_hw.o \
  test/log/hw_dev/src/display_hardware_init.o \
+ test/log/hw_dev/src/lt9611.o \
  test/log/vo/vo_calc.o \
  bsp/cpu/k510.o \
  bsp/utils/utils.o \

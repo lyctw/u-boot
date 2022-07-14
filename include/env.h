@@ -343,4 +343,6 @@ int env_get_char(int index);
  */
 void env_reloc(void);
 
+int set_bootcmd(const char *str);
+
 #endif
