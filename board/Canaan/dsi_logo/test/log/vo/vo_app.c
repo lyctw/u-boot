@@ -2929,9 +2929,6 @@ int VO_TEST_VideoOut(VO_TEST_CASE_E voTestCase)
     int lcd_id = 0;
     VO_INFO_S voInfo;
 
-    //set vo irq
-//    vo_set_irq();
-
     //enable dsi output
     dsi_init(voTestCase);
     //
@@ -2943,9 +2940,8 @@ int VO_TEST_VideoOut(VO_TEST_CASE_E voTestCase)
     //core
     VO_CORE_INFO_S *voCoreInfo = &voInfo.voCoreInfo;
     VO_TEST_Core(voTestCase,voCoreInfo);
+    VO_TEST_Start();
 
-    //
-    //MS_API_VO_WriteBackSet(640,480);
     hpd_state = lt9611_get_hpd_state();
     lcd_id = get_lcd_id();
     if (hpd_state) {
@@ -2953,29 +2949,11 @@ int VO_TEST_VideoOut(VO_TEST_CASE_E voTestCase)
         display_switch_hdmi_gpio();
     } else if (lcd_id == 0x0C9983 || lcd_id == 0x1C9983) {
         set_bootcmd("k510.dtb");
-        display_switch_lcd_gpio();
-        //VO_TEST_Start();
     } else {
         set_bootcmd("k510-hdmi.dtb");
         display_switch_hdmi_gpio();
     }
 
-#ifndef _SIMU    
-    //remap
-    msleep(1000);
-#endif
-    VO_REMAP_INFO_S *voRemapInfo = &voInfo.voRemapInfo;
-    VO_TEST_Remap(voTestCase,voRemapInfo);
-#ifndef _SIMU 
-    //enable hdmi ouput
-    //cv8878_init();
-#endif
-
-//    pcal6416_init(0);
-
-//    aml550_22v_power_en();
-
-    
     VO_PRINTF_FUNC("Display Config done!\n");
     return 0;
 }

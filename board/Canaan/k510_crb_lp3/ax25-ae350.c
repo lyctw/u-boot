@@ -303,15 +303,15 @@ int last_stage_init(void)
 void	reset_phy     (void)
 {
 
-	muxpin_set_function(31, FUNC_GPIO20);
-	gpio_set_drive_mode(20, GPIO_DM_OUTPUT);//GPIO_DM_OUTPUT
-	gpio_set_pin(20, GPIO_PV_LOW);//GPIO_PV_LOW
+	muxpin_set_function(31, FUNC_GPIO18);
+	gpio_set_drive_mode(18, GPIO_DM_OUTPUT);//GPIO_DM_OUTPUT
+	gpio_set_pin(18, GPIO_PV_LOW);//GPIO_PV_LOW
 	mdelay(20);
-	gpio_set_pin(20, GPIO_PV_HIGH);//GPIO_PV_HIGH
+	gpio_set_pin(18, GPIO_PV_HIGH);//GPIO_PV_HIGH
 	udelay(10);
-	gpio_set_pin(20, GPIO_PV_LOW);//GPIO_PV_LOW
+	gpio_set_pin(18, GPIO_PV_LOW);//GPIO_PV_LOW
 	mdelay(20);
-	gpio_set_pin(20, GPIO_PV_HIGH);//GPIO_PV_HIGH
+	gpio_set_pin(18, GPIO_PV_HIGH);//GPIO_PV_HIGH
 	mdelay(200);
 	return 0;
 }
