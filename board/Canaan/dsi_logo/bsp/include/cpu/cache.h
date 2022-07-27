@@ -1,9 +1,8 @@
 #ifndef _CACHE_H
 #define _CACHE_H
 #include "platform.h"
-#include <stdint.h>
-#include <stddef.h>
 #include <core_v5.h>
+#include "common.h"
 typedef struct{
     volatile unsigned long  configure;
     volatile unsigned long  control;
@@ -27,7 +26,7 @@ typedef struct{
     volatile unsigned long  tgt_read_data[4];
 } l2cache;
 
-volatile l2cache *ax25_l2cache;
+extern volatile l2cache *ax25_l2cache;
 
 /* Control Register */
 #define L2_ENABLE   0x1

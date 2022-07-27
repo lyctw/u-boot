@@ -25,9 +25,10 @@
 #include <string.h>
 #include <stdio.h>
 #include "platform.h"
-#include "spi.h"
+#include "controler/spi.h"
 #include "dmac.h"
 #include <interrupt.h>
+#include "common.h"
 
 volatile spi_t *const spi[4] =
 {

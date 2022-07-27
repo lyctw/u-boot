@@ -23,6 +23,10 @@ obj-y	:=  \
  test/log/hw_dev/src/display_hardware_init.o \
  test/log/hw_dev/src/lt9611.o \
  test/log/vo/vo_calc.o \
+ bsp/controler/spi.o \
+ bsp/cpu/cache.o \
+ bsp/cpu/interrupt.o \
+ test/log/ws2812/ws2812.o \
  bsp/cpu/k510.o \
  bsp/utils/utils.o \
  bsp/controler/video/mipi/dphy/mipi_corner.o \

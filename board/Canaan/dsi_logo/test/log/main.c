@@ -23,8 +23,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include <common.h>
-//#include <cpu/k510.h>
-//#include <cpu/cache.h>
 #include <cpu/interrupt.h>
 #include <cpu/sleep.h>
 #include <controler/i2c.h>
@@ -36,28 +34,11 @@
 #include <video/mipi/dphy/mipi_corner.h>
 #include <video/mipi/dphy/mipi_rxdphy.h>
 #include "pcal6416.h"
-#include  "controler/sysctl_clk.h"
-#include  "controler/sysctl_boot.h"
-
+#include "controler/sysctl_clk.h"
+#include "controler/sysctl_boot.h"
 #include "hw_dev/inc/display_hardware_init.h"
-
-//#include <video/mipi/dphy/mipi_txdphy.h>
-//
-//#include "isp/isp.h"
-//#include "vi/vi.h"
 #include "vo/vo.h"
-//#include "isp_3d/isp_3d.h"
-//#include "mfbc/mfbc.h"
-//#include "td/td.h"
-//#include "bt1120/bt1120.h"
-//#include "sensor/sensor.h"
-//
-//
-//#include "hw_dev/inc/ext_ctl_hw.h"
-//#include "hw_dev/inc/dev_hw.h"
-//#include "hw_dev/inc/dev_reg.h"
-//#include "hw_dev/inc/fpga_system.h"
-
+#include "ws2812/ws2812.h"
 
 
 void SYSCTL_DRV_Init(void)
@@ -226,9 +207,20 @@ ulong board_get_usable_ram_top(ulong total_size)
 	return gd->ram_top - 0x200000;
 }                                                   
 
+#define WS2812_PIN 122
+
+static void ws2812_init(void)
+{
+    ws2812_info *ws_info;
+    ws2812_init_spi(WS2812_PIN);
+    ws_info = ws2812_get_buf(1);
+    ws2812_set_data(ws_info, 0, NONE);
+    ws2812_send_data_spi(ws_info);
+}
 
 int board_late_init(void)
 {
+    ws2812_init();
 	main_logo(0,0,0,0);
 	return 0;
 }

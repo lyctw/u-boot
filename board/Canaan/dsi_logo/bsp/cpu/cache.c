@@ -22,10 +22,10 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include "cache.h"
+#include "cpu/cache.h"
 #include "core_v5.h"
 #include "platform.h"
-#include <assert.h>
+// #include <assert.h>
 
 volatile l2cache *ax25_l2cache = (volatile l2cache *)L2C_BASE_ADDR;
 
@@ -253,13 +253,13 @@ __attribute__((always_inline)) inline void l1cache_va_wbinval(uint64_t addr, siz
     l1cache_va_handle(addr, len, CCTL_L1D_VA_WBINVAL);
 }
 
-__attribute__((always_inline)) inline void cache_enable(void)
-{
-    l1cache_disable();
-    if(!is_dsp_type())
-        l2cache_enable();
-    l1cache_enable();
-}
+// __attribute__((always_inline)) inline void cache_enable(void)
+// {
+//     l1cache_disable();
+//     if(!is_dsp_type())
+//         l2cache_enable();
+//     l1cache_enable();
+// }
 
 // __attribute__((always_inline)) inline void cache_disable(void)
 // {

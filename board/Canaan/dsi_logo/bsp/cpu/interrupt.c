@@ -24,7 +24,7 @@
  */
 #include <stdio.h>
 #include "k510.h"
-#include "interrupt.h"
+#include "cpu/interrupt.h"
 #include <stdbool.h>
 #include <wdt.h>
 
