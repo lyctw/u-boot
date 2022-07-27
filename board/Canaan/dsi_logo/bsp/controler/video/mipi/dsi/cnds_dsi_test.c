@@ -1716,11 +1716,15 @@ int32_t hx8399_read_id(void)
         DsiRegWr(DIRECT_CMD_SEND_OFFSET, 0xffffffff);
 
         while ((cmd_sts & 0x08) != 0x08) {
-                usleep(1000);
-                retry--;
-                cmd_sts = DsiRegRd(DIRECT_CMD_STS_OFFSET);
-                if (retry == 0)
-                        return -1;
+            usleep(1000);
+            retry--;
+            cmd_sts = DsiRegRd(DIRECT_CMD_STS_OFFSET);
+            if (retry == 0){
+				printf("lcd id can not read ,reboot device \n");
+				usleep(1000);
+				writel(0x10001, 0x97000060);
+	            return -1;
+            }
         }
 
         err = DsiRegRd(DIRECT_CMD_RD_STS_OFFSET);
