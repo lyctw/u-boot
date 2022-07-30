@@ -1094,8 +1094,8 @@ static int VO_TEST_BRINGUP_DSI_GetCtl(VO_CTL_S *voCtl)
 #if 1
     dispCtl->total_size.Width = 1254;//1340;  1125 
     dispCtl->total_size.Height = 1958;//1958;//1938???  2200
-    dispCtl->disp_start.Width = (5+20+20+1);  // 46
-    dispCtl->disp_stop.Width = 1080 +(5+20+20+1);
+    dispCtl->disp_start.Width = 20 + 20;
+    dispCtl->disp_stop.Width = 1080 + 20 + 20;
     dispCtl->disp_start.Height = (5+8+1);   //14
     dispCtl->disp_stop.Height = 1920 + (5+8+1);  // 1958 - 1920 - 14 = 24
 #else
@@ -2940,16 +2940,18 @@ int VO_TEST_VideoOut(VO_TEST_CASE_E voTestCase)
     //core
     VO_CORE_INFO_S *voCoreInfo = &voInfo.voCoreInfo;
     VO_TEST_Core(voTestCase,voCoreInfo);
-    VO_TEST_Start();
 
     hpd_state = lt9611_get_hpd_state();
     lcd_id = get_lcd_id();
     if (hpd_state) {
+        *(uint32_t *)0x92700118 = 0x80;
         set_bootcmd("k510-hdmi.dtb");
         display_switch_hdmi_gpio();
     } else if (lcd_id == 0x0C9983 || lcd_id == 0x1C9983) {
+        VO_TEST_Start();
         set_bootcmd("k510.dtb");
     } else {
+        *(uint32_t *)0x92700118 = 0x80;
         set_bootcmd("k510-hdmi.dtb");
         display_switch_hdmi_gpio();
     }
