@@ -2929,8 +2929,6 @@ int VO_TEST_VideoOut(VO_TEST_CASE_E voTestCase)
     int lcd_id = 0;
     VO_INFO_S voInfo;
 
-    //enable dsi output
-    dsi_init(voTestCase);
     //
     VO_TEST_Init();
     //table
@@ -2940,6 +2938,9 @@ int VO_TEST_VideoOut(VO_TEST_CASE_E voTestCase)
     //core
     VO_CORE_INFO_S *voCoreInfo = &voInfo.voCoreInfo;
     VO_TEST_Core(voTestCase,voCoreInfo);
+
+    //enable dsi output
+    dsi_init(voTestCase);
 
     hpd_state = lt9611_get_hpd_state();
     lcd_id = get_lcd_id();
