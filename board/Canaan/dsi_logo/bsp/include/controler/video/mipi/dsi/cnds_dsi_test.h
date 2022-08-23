@@ -40,6 +40,6 @@
 void  dsc_cmd_send(int par, int data1, int data2);
 void  aml_lcd_init();
 void dsi_init_1080x1920();
-
+void dsi_init_800x1280();
 
 #endif /* CNDS_DSI_TEST_H_ */

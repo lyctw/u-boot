@@ -217,6 +217,8 @@ typedef enum _VO_SYSTEM_MODE_E
     VO_SYSTEM_MODE_1280x720x60P,
     //! System mode is 1080x1920 at 30 Hz.
     VO_SYSTEM_MODE_1080x1920x30P,
+    //! System mode is 800x1280 at 30 Hz.
+    VO_SYSTEM_MODE_800x1280x30P,
     
 }VO_SYSTEM_MODE_E;
 
@@ -736,4 +738,6 @@ int VO_TEST_SetCore(VO_CORE_INFO_S *voCoreInfo);
 int VO_TEST_SetRemap(unsigned int draw_num,VO_REMAP_INFO_S *voRemapInfo);
 //
 int VO_TEST_VideoOut(VO_TEST_CASE_E voTestCase);
+int32_t get_panel_id(void);
+
 #endif /*_VO_DEF_H_*/

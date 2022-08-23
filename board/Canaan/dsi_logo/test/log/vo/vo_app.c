@@ -183,6 +183,36 @@ static int VO_TEST_SetFrameBit(VO_DISP_CTL_INFO_S *dispCtl,VO_DISP_INFO_S *dispI
 		//	dispInfo->vsize= 0x53c;
 		//	dispInfo->hsize= 0x7a6;  
             break; 
+        case VO_SYSTEM_MODE_800x1280x30P:
+
+            printf("------------------------VO_SYSTEM_MODE_800x1280x30P  \n");
+#if 0 
+            dispInfo->dispHsyncCtl_start= 0x5;                              // HSA = 0x19 - 0x5 = 20
+			dispInfo->dispHsyncCtl_stop= 0x19;//0x25;
+		
+			dispInfo->dispHsync1Ctl_start= 0x1;                             //  VSA = 0x05 - 0x01 = 0x04
+			dispInfo->dispHsync1Ctl_stop= 0x5;
+            
+			dispInfo->dispVsync1Ctl_start= 0x1;
+			dispInfo->dispVsync1Ctl_stop= 0x1;
+
+            dispInfo->dispHsync2Ctl_start= 0x1;                             // 可以不配
+			dispInfo->dispHsync2Ctl_stop= 0x5;                              // 可以不配
+
+			dispInfo->dispVsync2Ctl_start= 0x1;
+			dispInfo->dispVsync2Ctl_stop= 0x1;
+#else
+            dispInfo->dispHsyncCtl_start= 5;                              // HSA = 0x19 - 0x5 = 20
+			dispInfo->dispHsyncCtl_stop= 10;
+		
+			dispInfo->dispHsync1Ctl_start= 1;                             //  VSA = 0x05 - 0x01 = 0x04
+			dispInfo->dispHsync1Ctl_stop= 5;
+            
+			dispInfo->dispVsync1Ctl_start= 1;
+			dispInfo->dispVsync1Ctl_stop= 1;
+#endif
+
+            break;   
         default:
             VO_PRINTF_FUNC("ERR_VO_ILLEGAL_PARAM!\n");
             break;     
@@ -1079,6 +1109,207 @@ static int VO_TEST_BRINGUP_BT1120_GetCtl(VO_CTL_S *voCtl)
 
 }
 #endif
+
+/************************************************************************
+*VO/DSI/DPHY Bringup*
+*************************************************************************/
+static int VO_TEST_800x1280_GetCtl(VO_CTL_S *voCtl)
+{
+
+
+    int HACT = 800;
+    int HSA = 24;
+    int HBP = 24;
+    int HFP = 30;
+
+    int VACT = 1280;
+    int VSA = 4;
+    int VBP = 12;
+    int VFP = 12;
+    int VOFF=1;
+    int HOFF=0;
+
+
+    VO_CHECK_POINTER(voCtl);
+    memset(voCtl,0,sizeof(voCtl));
+
+    //
+    VO_DISP_CTL_INFO_S *dispCtl= &voCtl->dispCtl;
+    dispCtl->Disp_en = TRUE;
+    dispCtl->SyncMode = VO_SYSTEM_MODE_1080x1920x30P;
+#if 0
+    dispCtl->total_size.Width = 960 ;//1060  ;//1061 ;//1340;  1125            1264
+    dispCtl->total_size.Height =1298 + 5 ;// 1319;//1958;//1938???  2200
+
+    dispCtl->disp_start.Width = (5+20+20+1);  // 46
+    dispCtl->disp_stop.Width = 800 +(5+20+20+1) ;
+
+    dispCtl->disp_start.Height = (5+8+1);   //14
+    dispCtl->disp_stop.Height = 1280 + (5+8+1);  // 1958 - 1920 - 14 = 24
+#else
+    dispCtl->total_size.Width = HACT+HSA+HBP+HFP;
+    dispCtl->total_size.Height = VACT+VSA+VBP+VFP;
+    dispCtl->disp_start.Width = HSA+HBP+HOFF;
+    dispCtl->disp_stop.Width = HACT+HSA+HBP+HOFF;
+    dispCtl->disp_start.Height = VSA+VBP+VOFF;
+    dispCtl->disp_stop.Height = VACT+VSA+VBP+VOFF;
+#endif
+#if 1
+    //LAYER0
+    VO_LAYER_CTL_INFO_S *layer0Ctl = &voCtl->layer0Ctl;
+    layer0Ctl->layer_en = FALSE;                                //TRUE  zhaoshuai  use picture true or  full red  FALSE
+    layer0Ctl->layer0_mfbd_en = FALSE;
+    layer0Ctl->endiany = VO_VIDEO_LAYER_Y_ENDIAN_MODE1;
+    layer0Ctl->endianuv = VO_VIDEO_LAYER_UV_ENDIAN_MODE2;       //VO_VIDEO_LAYER_UV_ENDIAN_MODE3
+    layer0Ctl->uvswap = FALSE;//;
+    layer0Ctl->ImgInDataMode = VO_VIDEO_LAYER_YUV_MODE_420;
+    layer0Ctl->active_size.Width = 1080;//1920;
+    layer0Ctl->active_size.Height = 1920;//1080;
+    layer0Ctl->out_size.Width = 1080; //1920
+    layer0Ctl->out_size.Height = 1920; //1080
+    layer0Ctl->ctl_offset.Width = 46;//198;
+    layer0Ctl->ctl_offset.Height = 14;//42;
+    layer0Ctl->size_offset.Width = 0x0;
+    layer0Ctl->size_offset.Height = 0x0;
+    
+    layer0Ctl->layerMix_glbalp = 0xff;
+
+    layer0Ctl->bufInfo.yAddr0= 0x01000000;
+    layer0Ctl->bufInfo.yAddr1= 0x01000000;
+    layer0Ctl->bufInfo.uvAddr0= 0x01000000 + 1920*1080;
+    layer0Ctl->bufInfo.uvAddr1= 0x01000000 + 1920*1080;
+
+    layer0Ctl->bufInfo.hsize_stride= 1080/8 -1;//VIDEO_LAYER2_RD_STRIDE;
+    layer0Ctl->bufInfo.vsize_stride= 1920;//0;
+    layer0Ctl->layerMix_en = TRUE;
+    layer0Ctl->layerMix_glbalp = 0xff;
+#else
+    VO_LAYER_CTL_INFO_S *layer0Ctl = &voCtl->layer0Ctl;
+    layer0Ctl->layer_en = TRUE;
+    layer0Ctl->layer0_mfbd_en = FALSE;
+    layer0Ctl->endiany = VO_VIDEO_LAYER_Y_ENDIAN_MODE1;
+    layer0Ctl->endianuv = VO_VIDEO_LAYER_UV_ENDIAN_MODE3;//VO_VIDEO_LAYER_UV_ENDIAN_MODE3
+    layer0Ctl->uvswap = FALSE;//;
+    layer0Ctl->ImgInDataMode = VO_VIDEO_LAYER_YUV_MODE_420;
+    layer0Ctl->active_size.Width =1080;//1920;
+    layer0Ctl->active_size.Height = 720;//1080;
+    layer0Ctl->out_size.Width = 1080;//1080; //1920
+    layer0Ctl->out_size.Height = 720;//1920; //1080
+    layer0Ctl->ctl_offset.Width = 46;//198;
+    layer0Ctl->ctl_offset.Height = 14;//42;
+    layer0Ctl->size_offset.Width = 0x0;
+    layer0Ctl->size_offset.Height = 0x0;
+    layer0Ctl->bufInfo.yAddr0= ISP_BUF_MAIN_Y;//0x01000000;
+    layer0Ctl->bufInfo.yAddr1= ISP_BUF_MAIN_Y;//0x01000000;
+    layer0Ctl->bufInfo.uvAddr0= ISP_BUF_MAIN_UV;//0x01000000 + 1920*1080;
+    layer0Ctl->bufInfo.uvAddr1= ISP_BUF_MAIN_UV;//0x01000000 + 1920*1080;
+    layer0Ctl->bufInfo.hsize_stride= ISP_BUF_MAIN_Y_STRIDE/8 -1;//1080/8 -1;//1080/8 -1;//VIDEO_LAYER2_RD_STRIDE;
+    layer0Ctl->bufInfo.vsize_stride= 1920;//0;
+    layer0Ctl->layerMix_en = TRUE;
+    layer0Ctl->layerMix_glbalp = 0xff;
+#endif
+/*
+    VO_LAYER_CTL_INFO_S *layer0Ctl = &voCtl->layer0Ctl;
+    layer0Ctl->layer_en = TRUE;
+    layer0Ctl->layer0_mfbd_en = FALSE;
+    layer0Ctl->endiany = VO_VIDEO_LAYER_Y_ENDIAN_MODE1;
+    layer0Ctl->endianuv = VO_VIDEO_LAYER_UV_ENDIAN_MODE3;//VO_VIDEO_LAYER_UV_ENDIAN_MODE3
+    layer0Ctl->uvswap = FALSE;//;
+    layer0Ctl->ImgInDataMode = VO_VIDEO_LAYER_YUV_MODE_420;
+    layer0Ctl->active_size.Width =1080;//1920;
+    layer0Ctl->active_size.Height = 720;//1080;
+    layer0Ctl->out_size.Width = 1080;//1080; //1920
+    layer0Ctl->out_size.Height = 720;//1920; //1080
+    layer0Ctl->ctl_offset.Width = 46;//198;
+    layer0Ctl->ctl_offset.Height = 14;//42;
+    layer0Ctl->size_offset.Width = 0x0;
+    layer0Ctl->size_offset.Height = 0x0;
+    layer0Ctl->bufInfo.yAddr0= 0x01000000;
+    layer0Ctl->bufInfo.yAddr1= 0x01000000;//0x01000000;
+    layer0Ctl->bufInfo.uvAddr0= ISP_BUF_MAIN_UV;//0x01000000 + 1920*1080;
+    layer0Ctl->bufInfo.uvAddr1= ISP_BUF_MAIN_UV;//0x01000000 + 1920*1080;
+    layer0Ctl->bufInfo.hsize_stride= 1080/8 -1;//1080/8 -1;//1080/8 -1;//VIDEO_LAYER2_RD_STRIDE;
+    layer0Ctl->bufInfo.vsize_stride= 1920;//0;
+    layer0Ctl->layerMix_en = TRUE;
+    layer0Ctl->layerMix_glbalp = 0xff;
+*/
+   
+
+    //LAYER1
+    VO_LAYER_CTL_INFO_S *layer1Ctl = &voCtl->layer1Ctl;
+    layer1Ctl->layer_en = FALSE;
+    layer1Ctl->layerMix_en = TRUE;
+    layer1Ctl->layerMix_glbalp = 0xff;
+    //LAYER2
+    VO_LAYER_CTL_INFO_S *layer2Ctl = &voCtl->layer2Ctl;
+    layer2Ctl->layer_en = FALSE;
+    layer2Ctl->layerMix_en = TRUE;
+    layer2Ctl->layerMix_glbalp = 0xff;
+    //LAYER3
+    VO_LAYER_CTL_INFO_S *layer3Ctl = &voCtl->layer3Ctl;
+    layer3Ctl->layer_en = FALSE;
+    layer3Ctl->layerMix_en = TRUE;
+    layer3Ctl->layerMix_glbalp = 0xff;
+    //
+    VO_LAYER_OSD_CTL_INFO_S   *layer4osd0Ctl = &voCtl->layer4osd0Ctl;
+    layer4osd0Ctl->layer_en = TRUE;
+    layer4osd0Ctl->osdrgb2yuvEn = TRUE;
+    layer4osd0Ctl->osdtype = OSD_RGB_32BIT;//OSD_MONOCHROME_8BIT;
+    layer4osd0Ctl->alphatpye = OSD_FIXED_VALUE;
+    layer4osd0Ctl->ImgInDataMode = VO_VIDEO_LAYER_YUV_MODE_420;
+    layer4osd0Ctl->active_size.Width = 640;
+    layer4osd0Ctl->active_size.Height = 480;
+    layer4osd0Ctl->ctl_offset.Width = dispCtl->disp_start.Width + 80;//80 + 46;
+    layer4osd0Ctl->ctl_offset.Height = 400;
+    layer4osd0Ctl->osdBufInfo.alp_addr0= 0x1fe00000;
+    layer4osd0Ctl->osdBufInfo.alp_addr1= 0x1fe00000;
+    layer4osd0Ctl->osdBufInfo.alpstride= 2560/8;
+    layer4osd0Ctl->osdBufInfo.vlu_addr0= 0x1fe00000;
+    layer4osd0Ctl->osdBufInfo.vlu_addr1= 0x1fe00000;
+    layer4osd0Ctl->osdBufInfo.osdstride= 2560/8;
+    layer4osd0Ctl->osdDmaInfo.dmarequestlen = 0xf;
+    layer4osd0Ctl->osdDmaInfo.dmamap = OSD_ORIGINAL_ORDER;
+    layer4osd0Ctl->osdDmaInfo.rgbrev = OSD_RGB_REV_R;
+    layer4osd0Ctl->layerMix_en = TRUE;
+    layer4osd0Ctl->layerMix_glbalp = 0xff;
+    //
+    VO_LAYER_OSD_CTL_INFO_S   *layer5osd1Ctl = &voCtl->layer5osd1Ctl;
+    layer5osd1Ctl->layer_en = FALSE;
+    layer5osd1Ctl->osdrgb2yuvEn = TRUE;
+    layer5osd1Ctl->osdtype = OSD_MONOCHROME_8BIT;
+    layer5osd1Ctl->alphatpye = OSD_FIXED_VALUE;
+    layer5osd1Ctl->ImgInDataMode = VO_VIDEO_LAYER_YUV_MODE_420;
+    layer5osd1Ctl->active_size.Width = 216;
+    layer5osd1Ctl->active_size.Height = 960;
+    layer5osd1Ctl->ctl_offset.Width = 800;
+    layer5osd1Ctl->ctl_offset.Height = 200;
+    layer5osd1Ctl->osdBufInfo.alp_addr0= 0x20200100;
+    layer5osd1Ctl->osdBufInfo.alp_addr1= 0x20200100;
+    layer5osd1Ctl->osdBufInfo.alpstride= 256/8;
+    layer5osd1Ctl->osdBufInfo.vlu_addr0= 0x20200100;
+    layer5osd1Ctl->osdBufInfo.vlu_addr1= 0x20200100;
+    layer5osd1Ctl->osdBufInfo.osdstride= 256/8;
+    layer5osd1Ctl->osdDmaInfo.dmarequestlen = 0xf;
+    layer5osd1Ctl->osdDmaInfo.dmamap = OSD_ORIGINAL_ORDER;
+    layer5osd1Ctl->osdDmaInfo.rgbrev = OSD_RGB_REV_R;
+    layer5osd1Ctl->layerMix_en = TRUE;
+    layer5osd1Ctl->layerMix_glbalp = 0xff;
+    //
+    VO_LAYER_OSD_CTL_INFO_S *layer6osd2Ctl = &voCtl->layer6osd2Ctl;
+    layer6osd2Ctl->layer_en = FALSE;
+    layer6osd2Ctl->osdrgb2yuvEn = TRUE;
+    layer6osd2Ctl->layerMix_en = TRUE;
+    layer6osd2Ctl->layerMix_glbalp = 0xff;
+    //
+    VO_DISP_BACK_GROUD_INFO_S *dispBackGroudInfo = &voCtl->dispBackGroudInfo;
+    dispBackGroudInfo->y = 0xff;
+    dispBackGroudInfo->u = 0x80;
+    dispBackGroudInfo->v = 0x80;
+    //
+    voCtl->yuv2rgb_ctl_en = TRUE;
+    voCtl->ditherctlen = TRUE;
+    voCtl->clutctlen = FALSE;
+}
 
 /************************************************************************
 *VO/DSI/DPHY Bringup*
@@ -2589,6 +2820,10 @@ static int VO_TEST_Core(VO_TEST_CASE_E voTestCase,VO_CORE_INFO_S *voCoreInfo)
 
             VO_TEST_BRINGUP_DSI_GetCtl(&voCtl);
             break;
+        case VO_DSI_MIPI_800x1280 :
+
+            VO_TEST_800x1280_GetCtl(&voCtl);
+            break;
         case LAYER0_420_IRS238C:
             VO_TEST_IRS238C_GetCtl(&voCtl);
            // VO_TEST_IRS238C(&voCtl,voCoreInfo);
@@ -2914,6 +3149,10 @@ static int dsi_init(VO_TEST_CASE_E voTestCase)
 //            display_gpio_reset();
             dsi_init_1080x1920();
             break;
+        case VO_DSI_MIPI_800x1280:
+            dsi_init_800x1280();
+
+            break;
 
         default:
             break;
@@ -2948,7 +3187,7 @@ int VO_TEST_VideoOut(VO_TEST_CASE_E voTestCase)
         *(uint32_t *)0x92700118 = 0x80;
         set_bootcmd("k510-hdmi.dtb");
         display_switch_hdmi_gpio();
-    } else if (lcd_id == 0x0C9983 || lcd_id == 0x1C9983) {
+    } else if (lcd_id == 0x0C9983 || lcd_id == 0x1C9983 || lcd_id == 0x46593) {
         VO_TEST_Start();
         set_bootcmd("k510.dtb");
     } else {

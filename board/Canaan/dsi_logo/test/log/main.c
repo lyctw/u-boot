@@ -160,18 +160,18 @@ int load_dsi_logo_to_ddr()
 int main_logo(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
 	unsigned long time;
+	int panel_id;
 
 	*(uint32_t *)0x970E00FC = 0x0fffff00;// (0x2 << 8) | (0x2 << 12) | (0x2 << 16) | (0x2 << 20) | (0x2 << 24);
 	*(uint32_t *)0x970E0100 = 0x000000ff;// (0x3 << 4) | 0x3;
 	*(uint32_t *)0x970E00F4 = 0x00550000;// (0x5 << 16) | (0x5 << 20);
 
 	load_dsi_logo_to_ddr();
-	printf("dsi logo start");
+	printf("dsi logo start\n");
 	time = get_timer(0);
 
     // hardware init
     display_gpio_init();
-
 
     SYSCTL_DRV_Init();
     
@@ -181,12 +181,18 @@ int main_logo(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 
     VO_DRV_Init();
 
-    VO_TEST_VideoOut(VO_DSI_MIPI_BRINGUP);
+    panel_id = get_panel_id();
+    if (panel_id == 0x46593) {
+        sysctl_clk_set_leaf_div(SYSCTL_CLK_DISPLAY_PIXEL,1, 16);
+        mipi_txdphy_set_pll(890, 24, 3);
+        VO_TEST_VideoOut(VO_DSI_MIPI_800x1280);
+    } else {
+        VO_TEST_VideoOut(VO_DSI_MIPI_BRINGUP);
+    }
 
 	time = get_timer(time);
 	printf("dsi logo end use %lu msec\n", time);
     return 0;
-
 }
 
 DECLARE_GLOBAL_DATA_PTR;
