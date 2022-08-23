@@ -277,6 +277,9 @@ int fdt_chosen(void *fdt)
 	int   nodeoffset;
 	int   err;
 	char  *str;		/* used to set string properties */
+	char  *env_buf;
+	char  *panel_id;
+	int len;
 
 	err = fdt_check_header(fdt);
 	if (err < 0) {
@@ -288,6 +291,22 @@ int fdt_chosen(void *fdt)
 	nodeoffset = fdt_find_or_add_subnode(fdt, 0, "chosen");
 	if (nodeoffset < 0)
 		return nodeoffset;
+
+	str = env_get("bootargs");
+
+	panel_id = env_get("panel-id");
+	if (panel_id && str) {
+		len = strlen(str) + 1 + sizeof(" panel.id=") + strlen(panel_id) + 1;
+		env_buf = malloc(len);
+		if (env_buf) {
+			memset(env_buf, 0, len);
+			snprintf(env_buf, len, "%s%s%s", str, " panel.id=", panel_id);
+			env_set("bootargs", env_buf);
+			free(env_buf);
+		} else {
+			printf("malloc %d buffer failed\n", len);
+		}
+	}
 
 	str = env_get("bootargs");
 	if (str) {

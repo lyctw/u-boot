@@ -3189,6 +3189,10 @@ int VO_TEST_VideoOut(VO_TEST_CASE_E voTestCase)
         display_switch_hdmi_gpio();
     } else if (lcd_id == 0x0C9983 || lcd_id == 0x1C9983 || lcd_id == 0x46593) {
         VO_TEST_Start();
+        char panel_id[16];
+        memset(panel_id, 0, sizeof(panel_id));
+        snprintf(panel_id, sizeof(panel_id), "0x%06X", lcd_id);
+        env_set("panel-id", panel_id);
         set_bootcmd("k510.dtb");
     } else {
         *(uint32_t *)0x92700118 = 0x80;
