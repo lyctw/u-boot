@@ -206,32 +206,11 @@ static u32 ns16550_getfcr(struct ns16550 *port)
 }
 #endif
 
-// int ns16550_calc_divisor(struct ns16550 *port, int clock, int baudrate)
-// {
-// 	const unsigned int mode_x_div = 16;
-// 
-// 	return DIV_ROUND_CLOSEST(clock, mode_x_div * baudrate);
-// }
-
-/* 
- * divisor = div(I) + div(F) = clk / (16 * baud)
- * quot = div(I) = clk / (16 * baud)
- * rem  = div(F) = clk % (16 * baud)
- * DLF = frac = div(F) * 2^dlf_size
- *
- * div(F) * (16 * baud) = rem
- * => frac = (2^dlf_size * rem) / (16 * baud)
- */
-unsigned int ns16550_calc_divisor(struct ns16550 *port, int clock, int baudrate, unsigned int *frac)
+int ns16550_calc_divisor(struct ns16550 *port, int clock, int baudrate)
 {
-	unsigned int quot, rem, base_baud;
+	const unsigned int mode_x_div = 16;
 
-	base_baud = baudrate * 16;
-	quot = clock / base_baud;
-	rem = clock % base_baud;
-	*frac = DIV_ROUND_CLOSEST(rem << 4, base_baud);
-
-	return quot;
+	return DIV_ROUND_CLOSEST(clock, mode_x_div * baudrate);
 }
 
 static void ns16550_setbrg(struct ns16550 *com_port, int baud_divisor)
@@ -348,7 +327,6 @@ static inline void _debug_uart_init(void)
 {
 	struct ns16550 *com_port = (struct ns16550 *)CONFIG_VAL(DEBUG_UART_BASE);
 	int baud_divisor;
-	unsigned int frac;
 
 	/* Wait until tx buffer is empty */
 	while (!(serial_din(&com_port->lsr) & UART_LSR_TEMT))
@@ -361,8 +339,7 @@ static inline void _debug_uart_init(void)
 	 * driver model.
 	 */
 	baud_divisor = ns16550_calc_divisor(com_port, CONFIG_DEBUG_UART_CLOCK,
-					    CONFIG_BAUDRATE, &frac);
-	serial_dout((&com_port)+0xC0, frac);
+					    CONFIG_BAUDRATE);
 	serial_dout(&com_port->ier, CONFIG_SYS_NS16550_IER);
 	serial_dout(&com_port->mcr, UART_MCRVAL);
 	serial_dout(&com_port->fcr, UART_FCR_DEFVAL);
@@ -447,12 +424,10 @@ static int ns16550_serial_setbrg(struct udevice *dev, int baudrate)
 {
 	struct ns16550 *const com_port = dev_get_priv(dev);
 	struct ns16550_plat *plat = com_port->plat;
-	unsigned int clock_divisor;
-	unsigned int frac;
+	int clock_divisor;
 
-	clock_divisor = ns16550_calc_divisor(com_port, plat->clock, baudrate, &frac);
+	clock_divisor = ns16550_calc_divisor(com_port, plat->clock, baudrate);
 
-	serial_out(frac, (&com_port)+0xC0);
 	ns16550_setbrg(com_port, clock_divisor);
 
 	return 0;

@@ -239,7 +239,7 @@ void ns16550_reinit(struct ns16550 *com_port, int baud_divisor);
  * @baudrate:	Required baud rate
  * Return: baud rate divisor that should be used
  */
-unsigned int ns16550_calc_divisor(struct ns16550 *port, int clock, int baudrate, unsigned int *frac);
+int ns16550_calc_divisor(struct ns16550 *port, int clock, int baudrate);
 
 /**
  * ns16550_serial_of_to_plat() - convert DT to platform data
