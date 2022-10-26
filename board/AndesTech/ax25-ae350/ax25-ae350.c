@@ -19,55 +19,7 @@
 #include <dm.h>
 #include <spl.h>
 
-#include "sysctl_clk.h"
-
 DECLARE_GLOBAL_DATA_PTR;
-
-/*yangguang: add iomux_init*/
-static void iomux_init(void)
-{
-  volatile uint32_t* iomux_reg = (void*)0x97040000;
-//  volatile uint32_t* iomux_reg = (void*)0x97050000;
-  int i;
-  printf("yangguang: iomux_init \n");
-//  for(i = 0; i < 200; i++)
-  for(i = 7; i < 127; i++)
-  {
-      iomux_reg[i] = 0xFF0C00;
-  }
-}
-
-static void sysctl_enable_all_leaf_clk()
-{
-	sysctl_clk_node_e node;
-	uint32_t freq = 0;
-
-	for(node = SYSCTL_CLK_AX25M_SRC; node < SYSCTL_CLK_NODE_MAX; node ++)
-	{
-		sysctl_clk_set_leaf_en(node,true);
-	}
-
-	sysctl_clk_set_leaf_en(SYSCTL_CLK_GNNE_SYS,false);
-	sysctl_clk_set_leaf_en(SYSCTL_CLK_GNNE_AXI,false);
-
-	sysctl_boot_set_root_clk_freq(SYSCTL_CLK_ROOT_PLL1, 63, 0, 0);
-
-	sysctl_clk_set_leaf_parent(SYSCTL_CLK_GNNE_SYS, SYSCTL_CLK_ROOT_PLL1_DIV_2);
-	sysctl_clk_set_leaf_parent(SYSCTL_CLK_GNNE_AXI, SYSCTL_CLK_ROOT_PLL1_DIV_2);
-
-	sysctl_clk_set_leaf_div(SYSCTL_CLK_GNNE_SYS,3,6);
-	sysctl_clk_set_leaf_en(SYSCTL_CLK_GNNE_SYS,true);
-
-	freq = sysctl_clk_get_leaf_freq(SYSCTL_CLK_GNNE_SYS);
-	printf("GNNE sys clock freq changed: %d \r\n", freq);
-
-	sysctl_clk_set_leaf_div(SYSCTL_CLK_GNNE_AXI,3,6);
-	sysctl_clk_set_leaf_en(SYSCTL_CLK_GNNE_AXI,true);
-
-	freq = sysctl_clk_get_leaf_freq(SYSCTL_CLK_GNNE_AXI);
-	printf("GNNE AXI clock freq changed: %d \r\n", freq);
-
-}
 
 /*
  * Miscellaneous platform dependent initializations
@@ -77,14 +29,11 @@ int board_init(void)
 {
 	gd->bd->bi_boot_params = PHYS_SDRAM_0 + 0x400;
 
-	sysctl_enable_all_leaf_clk();
-	iomux_init();
 	return 0;
 }
 
 int dram_init(void)
 {
-	ddr_init();
 	return fdtdec_setup_mem_size_base();
 }
 
