@@ -9,7 +9,7 @@ config DM_RESET
 	  reset controller hardware module within the chip. In U-Boot, reset
 	  controller drivers allow control over these reset signals. In some
 	  cases this API is applicable to chips outside the CPU as well,
-	  although driving such reset isgnals using GPIOs may be more
+	  although driving such reset signals using GPIOs may be more
 	  appropriate in this case.
 
 config SANDBOX_RESET
