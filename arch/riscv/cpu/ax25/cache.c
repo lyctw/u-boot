@@ -22,28 +22,6 @@
 #endif
 #endif
 
-#ifdef CONFIG_V5L2_CACHE
-static void _cache_enable(void)
-{
-	struct udevice *dev = NULL;
-
-	uclass_find_first_device(UCLASS_CACHE, &dev);
-
-	if (dev)
-		cache_enable(dev);
-}
-
-static void _cache_disable(void)
-{
-	struct udevice *dev = NULL;
-
-	uclass_find_first_device(UCLASS_CACHE, &dev);
-
-	if (dev)
-		cache_disable(dev);
-}
-#endif
-
 void flush_dcache_all(void)
 {
 #if !CONFIG_IS_ENABLED(SYS_ICACHE_OFF)

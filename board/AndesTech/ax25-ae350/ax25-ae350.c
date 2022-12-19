@@ -72,6 +72,11 @@ void *board_fdt_blob_setup(int *err)
 	return NULL;
 }
 
+void spl_board_init()
+{
+	enable_caches();
+}
+
 int smc_init(void)
 {
 	int node = -1;
