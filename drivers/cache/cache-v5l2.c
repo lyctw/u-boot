@@ -154,8 +154,7 @@ static int v5l2_probe(struct udevice *dev)
 	cfg_val = readl(&regs->configure);
 	ctl_val = readl(&regs->control);
 
-	if (!(ctl_val & L2_ENABLE))
-		ctl_val |= L2_ENABLE;
+	ctl_val |= L2_ENABLE;
 
 	if (plat->iprefetch != -EINVAL) {
 		ctl_val &= ~(IPREPETCH_MSK);
