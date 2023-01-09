@@ -5,66 +5,23 @@
  */
 
 #include <common.h>
+#include <cache.h>
 #include <cpu_func.h>
 #include <dm.h>
-#include <asm/cache.h>
-#include <dm/uclass-internal.h>
-#include <cache.h>
-#include <asm/csr.h>
 
-#ifdef CONFIG_RISCV_NDS_CACHE
-#if CONFIG_IS_ENABLED(RISCV_MMODE)
-/* mcctlcommand */
-#define CCTL_REG_MCCTLCOMMAND_NUM	0x7cc
-
-/* D-cache operation */
-#define CCTL_L1D_WBINVAL_ALL	6
-#endif
-#endif
-
-void flush_dcache_all(void)
+void enable_caches(void)
 {
-#if !CONFIG_IS_ENABLED(SYS_ICACHE_OFF)
-#ifdef CONFIG_RISCV_NDS_CACHE
-#if CONFIG_IS_ENABLED(RISCV_MMODE)
-	csr_write(CCTL_REG_MCCTLCOMMAND_NUM, CCTL_L1D_WBINVAL_ALL);
-#endif
-#endif
-#endif
-}
+	struct udevice *dev;
+	int ret;
 
-void flush_dcache_range(unsigned long start, unsigned long end)
-{
-	flush_dcache_all();
-}
-
-void invalidate_dcache_range(unsigned long start, unsigned long end)
-{
-	flush_dcache_all();
-}
-
-void icache_enable(void)
-{
-}
-
-void icache_disable(void)
-{
-}
-
-void dcache_enable(void)
-{
-}
-
-void dcache_disable(void)
-{
-}
-
-int icache_status(void)
-{
-	return 0;
-}
-
-int dcache_status(void)
-{
-	return 0;
+	ret = uclass_get_device_by_driver(UCLASS_CACHE,
+					  DM_DRIVER_GET(v5l2_cache),
+					  &dev);
+	if (ret) {
+		log_debug("Cannot enable v5l2 cache\n");
+	} else {
+		ret = cache_enable(dev);
+		if (ret)
+			log_debug("v5l2 cache enable failed\n");
+	}
 }

@@ -5,6 +5,7 @@
  */
 
 #include <common.h>
+#include <cpu_func.h>
 #include <flash.h>
 #include <image.h>
 #include <init.h>
@@ -74,6 +75,7 @@ void *board_fdt_blob_setup(int *err)
 
 void spl_board_init()
 {
+	/* enable v5l2 cache */
 	enable_caches();
 }
 
@@ -101,18 +103,10 @@ int smc_init(void)
 	return 0;
 }
 
-static void v5l2_init(void)
-{
-	struct udevice *dev;
-
-	uclass_get_device(UCLASS_CACHE, 0, &dev);
-}
-
 #ifdef CONFIG_BOARD_EARLY_INIT_F
 int board_early_init_f(void)
 {
 	smc_init();
-	v5l2_init();
 
 	return 0;
 }
