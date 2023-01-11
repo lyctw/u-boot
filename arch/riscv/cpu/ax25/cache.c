@@ -1,58 +1,56 @@
 // SPDX-License-Identifier: GPL-2.0+
 /*
- * Copyright (C) 2017 Andes Technology Corporation
+ * Copyright (C) 2023 Andes Technology Corporation
  * Rick Chen, Andes Technology Corporation <rick@andestech.com>
  */
 
+#include <asm/csr.h>
+#include <asm/asm.h>
 #include <common.h>
+#include <cache.h>
 #include <cpu_func.h>
 #include <dm.h>
-#include <asm/cache.h>
 #include <dm/uclass-internal.h>
-#include <cache.h>
-#include <asm/csr.h>
+#include <asm/arch-andes/csr.h>
+#include <asm/arch-andes/sbi.h>
 
-#ifdef CONFIG_RISCV_NDS_CACHE
-#if CONFIG_IS_ENABLED(RISCV_MMODE)
-/* mcctlcommand */
-#define CCTL_REG_MCCTLCOMMAND_NUM	0x7cc
+void enable_caches(void)
+{
+	struct udevice *dev;
+	int ret;
 
-/* D-cache operation */
-#define CCTL_L1D_WBINVAL_ALL	6
-#endif
-#endif
+	ret = uclass_get_device_by_driver(UCLASS_CACHE,
+					  DM_DRIVER_GET(v5l2_cache),
+					  &dev);
+	if (ret) {
+		log_debug("Cannot enable v5l2 cache\n");
+	} else {
+		ret = cache_enable(dev);
+		if (ret)
+			log_debug("v5l2 cache enable failed\n");
+	}
+}
 
-#ifdef CONFIG_V5L2_CACHE
-static void _cache_enable(void)
+static void cache_ops(int (*ops)(struct udevice *dev))
 {
 	struct udevice *dev = NULL;
 
 	uclass_find_first_device(UCLASS_CACHE, &dev);
 
 	if (dev)
-		cache_enable(dev);
+		ops(dev);
 }
-
-static void _cache_disable(void)
-{
-	struct udevice *dev = NULL;
-
-	uclass_find_first_device(UCLASS_CACHE, &dev);
-
-	if (dev)
-		cache_disable(dev);
-}
-#endif
 
 void flush_dcache_all(void)
 {
-#if !CONFIG_IS_ENABLED(SYS_ICACHE_OFF)
-#ifdef CONFIG_RISCV_NDS_CACHE
 #if CONFIG_IS_ENABLED(RISCV_MMODE)
-	csr_write(CCTL_REG_MCCTLCOMMAND_NUM, CCTL_L1D_WBINVAL_ALL);
+	csr_write(CSR_MCCTLCOMMAND, CCTL_L1D_WBINVAL_ALL);
+#else
+	if(dcache_status())
+		sbi_andes_dcache_wbinval_all();
 #endif
-#endif
-#endif
+
+	cache_ops(cache_wbinval);
 }
 
 void flush_dcache_range(unsigned long start, unsigned long end)
@@ -67,26 +65,58 @@ void invalidate_dcache_range(unsigned long start, unsigned long end)
 
 void icache_enable(void)
 {
-}
-
-void icache_disable(void)
-{
+#if CONFIG_IS_ENABLED(RISCV_MMODE)
+	asm volatile("csrsi %0, 0x1" :: "i"(CSR_MCACHE_CTL));
+#else
+	sbi_andes_enable_icache();
+#endif
 }
 
 void dcache_enable(void)
 {
+#if CONFIG_IS_ENABLED(RISCV_MMODE)
+	asm volatile("csrsi %0, 0x2" :: "i"(CSR_MCACHE_CTL));
+#else
+	if (!(sbi_andes_get_cache_ctl_status() & MCACHE_CTL_DC_EN))
+		sbi_andes_enable_dcache();
+#endif
+	cache_ops(cache_enable);
 }
 
-void dcache_disable(void)
+bool icache_enabled(void)
 {
+	int ret = 0;
+
+#if CONFIG_IS_ENABLED(RISCV_MMODE)
+	asm volatile (
+		"csrr t1, 0x7ca\n\t"
+		"andi	%0, t1, 0x01\n\t"
+		: "=r" (ret)
+		:
+		: "memory"
+	);
+#else
+	ret = (sbi_andes_get_cache_ctl_status() & MCACHE_CTL_IC_EN);
+#endif
+
+	return !!ret;
 }
 
-int icache_status(void)
+bool dcache_enabled(void)
 {
-	return 0;
-}
+	int ret = 0;
 
-int dcache_status(void)
-{
-	return 0;
+#if CONFIG_IS_ENABLED(RISCV_MMODE)
+	asm volatile (
+		"csrr t1, 0x7ca\n\t"
+		"andi	%0, t1, 0x02\n\t"
+		: "=r" (ret)
+		:
+		: "memory"
+	);
+#else
+	ret = (sbi_andes_get_cache_ctl_status() & MCACHE_CTL_DC_EN);
+#endif
+
+	return !!ret;
 }
