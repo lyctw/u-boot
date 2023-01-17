@@ -277,11 +277,6 @@ config SBI_IPI
 	default y if RISCV_SMODE || SPL_RISCV_SMODE
 	depends on SMP
 
-config SBI_ANDES_CACHE
-	bool
-	depends on SBI
-	default y if TARGET_AX25_AE350
-
 config XIP
 	bool "XIP mode"
 	help
