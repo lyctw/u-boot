@@ -10,6 +10,8 @@
 #include <errno.h>
 #include <asm/encoding.h>
 #include <asm/sbi.h>
+#include <linux/compat.h>
+#include <malloc.h>
 
 struct sbiret sbi_ecall(int ext, int fid, unsigned long arg0,
 			unsigned long arg1, unsigned long arg2,
@@ -218,6 +220,182 @@ int sbi_dbcn_write_byte(unsigned char ch)
 			SBI_EXT_DBCN_CONSOLE_WRITE_BYTE,
 			ch, 0, 0, 0, 0, 0);
 	return ret.error;
+}
+
+struct sbi_mpxy {
+	void *shmem;
+	bool active;
+};
+
+static struct sbi_mpxy sbi_mpxy_hart_data __section(".data");
+
+int sbi_mpxy_release_shmem(void)
+{
+	struct sbiret sret;
+	struct sbi_mpxy *mpxy = &sbi_mpxy_hart_data;
+
+	if (!mpxy->shmem)
+		return -ENOMEM;
+
+	free(mpxy->shmem);
+
+	sret = sbi_ecall(SBI_EXT_MPXY, SBI_EXT_MPXY_SET_SHMEM,
+			 0, -1U, -1U, 0, 0, 0);
+
+	if (sret.error) {
+		pr_err("Shared memory disabling failed\n");
+		return sret.error;
+	}
+
+	mpxy->shmem = NULL;
+	mpxy->active = false;
+
+	return 0;
+}
+
+/**
+ * Setup shared memory for boot hart
+ */
+int sbi_mpxy_setup_shmem(void)
+{
+	struct sbi_mpxy *mpxy = &sbi_mpxy_hart_data;
+	struct sbiret sret;
+	void *shmem = NULL;
+
+	if (mpxy->active)
+		return -EINVAL;
+
+	/* Allocate 4 KiB memory aligend with 4 KiB */
+	shmem = memalign(PAGE_SIZE, PAGE_SIZE);
+	if (!shmem) {
+		pr_err("Allocate RPXY shared memory fail");
+		return -ENOMEM;
+	}
+	mpxy->shmem = shmem;
+
+	/**
+	 * Linux setup of shmem is done in mpxy OVERWRITE mode.
+	 * flags[1:0] = 00b
+	 **/
+	sret = sbi_ecall(SBI_EXT_MPXY, SBI_EXT_MPXY_SET_SHMEM,
+			 PAGE_SIZE, (unsigned long)mpxy->shmem, 0, 0, 0, 0);
+	if (sret.error) {
+		sbi_mpxy_release_shmem();
+		return sret.error;
+	}
+
+	mpxy->active = true;
+
+	return 0;
+}
+
+int sbi_mpxy_read_attrs(u32 channelid, u32 base_attrid, u32 attr_count,
+			void *attrs_buf)
+{
+	struct sbiret sret;
+	struct sbi_mpxy *mpxy = &sbi_mpxy_hart_data;
+
+	if (!attr_count || !attrs_buf)
+		return -EINVAL;
+
+	sret = sbi_ecall(SBI_EXT_MPXY, SBI_EXT_MPXY_READ_ATTRS,
+			 channelid, base_attrid, attr_count, 0, 0, 0);
+	if (!sret.error) {
+		memcpy(attrs_buf, mpxy->shmem, attr_count * sizeof(u32));
+	}
+
+	return sret.error;
+}
+
+int sbi_mpxy_write_attrs(u32 channelid, u32 base_attrid, u32 attr_count,
+			void *attrs_buf)
+{
+	struct sbiret sret;
+	struct sbi_mpxy *mpxy = &sbi_mpxy_hart_data;
+
+	if (!attr_count || !attrs_buf)
+		return -EINVAL;
+
+	memcpy(mpxy->shmem, attrs_buf, attr_count * sizeof(u32));
+
+	sret = sbi_ecall(SBI_EXT_MPXY, SBI_EXT_MPXY_WRITE_ATTRS,
+			 channelid, base_attrid, attr_count, 0, 0, 0);
+
+	return sret.error;
+}
+
+int sbi_mpxy_send_message_withresp(u32 channelid, u32 msgid,
+				   void *tx, unsigned long tx_msglen,
+				   void *rx, unsigned long *rx_msglen)
+{
+	struct sbiret sret;
+	struct sbi_mpxy *mpxy = &sbi_mpxy_hart_data;
+
+	if (!mpxy->active)
+		return -ENODEV;
+
+	/**
+	 * Message protocols allowed to have no data in
+	 * messages
+	 */
+	if (tx_msglen)
+		memcpy(mpxy->shmem, tx, tx_msglen);
+
+	sret = sbi_ecall(SBI_EXT_MPXY, SBI_EXT_MPXY_SEND_MSG_WITH_RESP,
+			 channelid, msgid, tx_msglen, 0, 0, 0);
+
+	if (rx && !sret.error) {
+		memcpy(rx, mpxy->shmem, sret.value);
+		if (rx_msglen)
+			*rx_msglen = sret.value;
+	}
+
+	return sret.error;
+}
+
+int sbi_mpxy_send_message_noresp(u32 channelid, u32 msgid,
+				 void *tx, unsigned long tx_msglen)
+{
+	struct sbiret sret;
+	struct sbi_mpxy *mpxy = &sbi_mpxy_hart_data;
+
+	if (!mpxy->active)
+		return -ENODEV;
+
+	/**
+	 * Message protocols allowed to have no data in
+	 * messages.
+	 */
+	if (tx_msglen)
+		memcpy(mpxy->shmem, tx, tx_msglen);
+
+	sret = sbi_ecall(SBI_EXT_MPXY, SBI_EXT_MPXY_SEND_MSG_NO_RESP,
+			 channelid, msgid, tx_msglen, 0, 0, 0);
+
+	return sret.error;
+}
+
+int sbi_mpxy_get_notifications(u32 channelid, void *rx,
+			       unsigned long *rx_msglen)
+{
+	struct sbiret sret;
+	struct sbi_mpxy *mpxy = &sbi_mpxy_hart_data;
+
+	if (!mpxy->active)
+		return -ENODEV;
+
+	if (!rx)
+		return -EINVAL;
+
+	sret = sbi_ecall(SBI_EXT_MPXY, SBI_EXT_MPXY_GET_NOTIFICATIONS,
+			 channelid, 0, 0, 0, 0, 0);
+	if (!sret.error) {
+		memcpy(rx, mpxy->shmem, sret.value);
+		if (rx_msglen)
+			*rx_msglen = sret.value;
+	}
+
+	return sret.error;
 }
 
 #ifdef CONFIG_SBI_V01

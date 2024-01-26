@@ -35,6 +35,7 @@ enum sbi_ext_id {
 	SBI_EXT_STA = 0x535441,
 	SBI_EXT_DBTR = 0x44425452,
 	SBI_EXT_SSE = 0x535345,
+	SBI_EXT_MPXY = 0x4D505859,
 };
 
 enum sbi_ext_base_fid {
@@ -100,6 +101,42 @@ enum sbi_ext_dbcn_fid {
 	SBI_EXT_DBCN_CONSOLE_WRITE = 0,
 	SBI_EXT_DBCN_CONSOLE_READ,
 	SBI_EXT_DBCN_CONSOLE_WRITE_BYTE,
+};
+
+enum sbi_ext_mpxy_fid {
+	SBI_EXT_MPXY_SET_SHMEM,
+	SBI_EXT_MPXY_GET_CHANNEL_IDS,
+	SBI_EXT_MPXY_READ_ATTRS,
+	SBI_EXT_MPXY_WRITE_ATTRS,
+	SBI_EXT_MPXY_SEND_MSG_WITH_RESP,
+	SBI_EXT_MPXY_SEND_MSG_NO_RESP,
+	SBI_EXT_MPXY_GET_NOTIFICATIONS,
+};
+
+enum sbi_mpxy_attr_id {
+	/* Standard channel attributes managed by MPXY framework */
+	SBI_MPXY_ATTR_MSG_PROT_ID		= 0x00000000,
+	SBI_MPXY_ATTR_MSG_PROT_VER		= 0x00000001,
+	SBI_MPXY_ATTR_MSG_MAX_LEN		= 0x00000002,
+	SBI_MPXY_ATTR_MSG_SEND_TIMEOUT		= 0x00000003,
+	SBI_MPXY_ATTR_CHANNEL_CAPABILITY	= 0x00000004,
+	SBI_MPXY_ATTR_MSI_CONTROL		= 0x00000005,
+	SBI_MPXY_ATTR_MSI_ADDR_LO		= 0x00000006,
+	SBI_MPXY_ATTR_MSI_ADDR_HI		= 0x00000007,
+	SBI_MPXY_ATTR_MSI_DATA			= 0x00000008,
+	SBI_MPXY_ATTR_SSE_EVENT_ID		= 0x00000009,
+	SBI_MPXY_ATTR_EVENTS_STATE_CONTROL	= 0x0000000A,
+	SBI_MPXY_ATTR_STD_ATTR_MAX_IDX,
+	/* Message protocol specific attributes, managed by
+	 * message protocol driver */
+	SBI_MPXY_ATTR_MSGPROTO_ATTR_START	= 0x80000000,
+	SBI_MPXY_ATTR_MSGPROTO_ATTR_END		= 0xffffffff
+};
+
+enum sbi_mpxy_msgproto_id {
+	SBI_MPXY_MSGPROTO_RPMI_ID = 0x0,
+	SBI_MPXY_MSGPROTO_STMM_ID = 0x1,
+	SBI_MPXY_MSGPROTO_TEE_ID = 0x2,
 };
 
 #ifdef CONFIG_SBI_V01
@@ -173,5 +210,17 @@ int sbi_get_marchid(long *marchid);
 int sbi_get_mimpid(long *mimpid);
 void sbi_srst_reset(unsigned long type, unsigned long reason);
 int sbi_dbcn_write_byte(unsigned char ch);
-
+int sbi_mpxy_setup_shmem(void);
+int sbi_mpxy_release_shmem(void);
+int sbi_mpxy_read_attrs(u32 channelid, u32 base_attrid,
+			u32 attr_count, void *attrbuf);
+int sbi_mpxy_write_attrs(u32 channelid, u32 base_attrid,
+			 u32 attr_count, void *attrbuf);
+int sbi_mpxy_send_message_withresp(u32 channelid, u32 msgid,
+				   void *tx, unsigned long tx_msglen,
+				   void *rx, unsigned long *rx_msglen);
+int sbi_mpxy_send_message_noresp(u32 channel, u32 msgid,
+				 void *tx, unsigned long tx_msglen);
+int sbi_mpxy_get_notifications(u32 channelid, void *rx,
+			       unsigned long *rx_msglen);
 #endif

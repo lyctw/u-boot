@@ -7,6 +7,7 @@
 #include <dm.h>
 #include <dm/device_compat.h>
 #include <dm/lists.h>
+#include <fdt_support.h>
 #include <log.h>
 #include <malloc.h>
 #include <tee.h>
@@ -14,10 +15,42 @@
 #include <linux/err.h>
 #include <linux/io.h>
 #include <tee/optee_service.h>
+#include <asm/sbi.h>
 
 #include "optee_smc.h"
 #include "optee_msg.h"
 #include "optee_private.h"
+
+#if defined(CONFIG_RISCV)
+enum mpxy_opteed_message_id {
+        OPTEED_MSG_COMMUNICATE = 0x01,
+        OPTEED_MSG_COMPLETE = 0x02,
+};
+
+struct mpxy_opteed_msg {
+        unsigned long a0;
+        unsigned long a1;
+        unsigned long a2;
+        unsigned long a3;
+        unsigned long a4;
+        unsigned long a5;
+        unsigned long a6;
+        unsigned long a7;
+};
+
+struct mpxy_opteed_resp {
+        unsigned long value;
+        unsigned long extp1;
+        unsigned long extp2;
+        unsigned long extp3;
+};
+
+struct sbi_mpxy_opteed_ctx {
+        u32 channel_id;
+};
+
+static struct sbi_mpxy_opteed_ctx mpxy_opteed_ctx __section(".data");
+#endif
 
 #define PAGELIST_ENTRIES_PER_PAGE \
 	((OPTEE_MSG_NONCONTIG_PAGE_SIZE / sizeof(u64)) - 1)
@@ -694,7 +727,6 @@ static const struct tee_driver_ops optee_ops = {
 static bool is_optee_api(optee_invoke_fn *invoke_fn)
 {
 	struct arm_smccc_res res;
-
 	invoke_fn(OPTEE_SMC_CALLS_UID, 0, 0, 0, 0, 0, 0, 0, &res);
 
 	return res.a0 == OPTEE_MSG_UID_0 && res.a1 == OPTEE_MSG_UID_1 &&
@@ -763,7 +795,36 @@ static void optee_smccc_smc(unsigned long a0, unsigned long a1,
 			    unsigned long a6, unsigned long a7,
 			    struct arm_smccc_res *res)
 {
+#ifndef CONFIG_RISCV
 	arm_smccc_smc(a0, a1, a2, a3, a4, a5, a6, a7, res);
+#else
+	struct mpxy_opteed_msg tx;
+	struct mpxy_opteed_resp rx;
+	unsigned long rx_msglen;
+	int ret;
+
+	sbi_mpxy_setup_shmem();
+
+	tx.a0 = a0;
+	tx.a1 = a1;
+	tx.a2 = a2;
+	tx.a3 = a3;
+	tx.a4 = a4;
+	tx.a5 = a5;
+	tx.a6 = a6;
+	tx.a7 = a7;
+	ret = sbi_mpxy_send_message_withresp(mpxy_opteed_ctx.channel_id,
+					     OPTEED_MSG_COMMUNICATE, &tx,
+					     sizeof(tx), &rx, &rx_msglen);
+	if (ret)
+		pr_warn("optee_smccc_smc - riscv archtecture call result %d\n", ret);
+	res->a0 = rx.value;
+	res->a1 = rx.extp1;
+	res->a2 = rx.extp2;
+	res->a3 = rx.extp3;
+
+	sbi_mpxy_release_shmem();
+#endif
 }
 
 static void optee_smccc_hvc(unsigned long a0, unsigned long a1,
@@ -772,7 +833,9 @@ static void optee_smccc_hvc(unsigned long a0, unsigned long a1,
 			    unsigned long a6, unsigned long a7,
 			    struct arm_smccc_res *res)
 {
+#ifndef CONFIG_RISCV
 	arm_smccc_hvc(a0, a1, a2, a3, a4, a5, a6, a7, res);
+#endif
 }
 
 static optee_invoke_fn *get_invoke_func(struct udevice *dev)
@@ -814,11 +877,57 @@ static int optee_bind(struct udevice *dev)
 	return 0;
 }
 
+#ifdef CONFIG_RISCV
+int fdt_get_mpxy_opteed_channel_id(uint32_t *id)
+{
+	const char *compatible = "riscv,sbi-mpxy-opteed";
+	const void *fdt_blob = gd->fdt_blob;
+	uint32_t prot_id;
+	int node, rc;
+
+	node = fdt_node_offset_by_compatible(fdt_blob, -1, compatible);
+	if (node < 0) {
+		pr_err("unable to find %s node\n", compatible);
+		return node;
+	}
+
+	*id = fdt_getprop_u32_default_node(fdt_blob, node, 0,
+					   "riscv,sbi-mpxy-channel-id",
+					   -1);
+	if (*id < 0) {
+		pr_err("Failed to read \"riscv,sbi-mpxy-channel-id\" property\n");
+		return -EINVAL;
+	}
+
+	sbi_mpxy_setup_shmem();
+	rc = sbi_mpxy_read_attrs(*id, SBI_MPXY_ATTR_MSG_PROT_ID,
+				1, &prot_id);
+	sbi_mpxy_release_shmem();
+	if (rc) {
+		pr_err("Failed to read MPXY channel-%d attributes\n", *id);
+		return -EINVAL;
+	}
+
+	if (prot_id != SBI_MPXY_MSGPROTO_TEE_ID) {
+		pr_err("MPXY channel%d does not support TEE protocol\n", *id);
+		return -EINVAL;
+	}
+
+	return 0;
+}
+#endif
+
 static int optee_probe(struct udevice *dev)
 {
 	struct optee_pdata *pdata = dev_get_plat(dev);
 	u32 sec_caps;
 	int ret;
+
+#ifdef CONFIG_RISCV
+	ret = fdt_get_mpxy_opteed_channel_id(&mpxy_opteed_ctx.channel_id);
+	if (ret)
+		return -ENOTSUPP;
+#endif
 
 	if (!is_optee_api(pdata->invoke_fn)) {
 		dev_err(dev, "OP-TEE api uid mismatch\n");
