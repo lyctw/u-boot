@@ -1473,6 +1473,11 @@ config SPL_OPTEE_IMAGE
 	  OP-TEE is an open source Trusted OS which is loaded by SPL.
 	  More detail at: https://github.com/OP-TEE/optee_os
 
+config SPL_OPTEE_IMAGE_LOAD_ADDR
+	hex "OP-TEE Trusted OS image load address"
+	help
+	  Load address of the OP-TEE binary.
+
 config SPL_OPENSBI
 	bool "Support RISC-V OpenSBI"
 	depends on RISCV && SPL_RISCV_MMODE && RISCV_SMODE
