@@ -8,6 +8,47 @@
 / {
 	chosen {
 		bootph-pre-ram;
+		opensbi-domains {
+			compatible = "opensbi,domain,config";
+
+			tmem: tmem {
+				compatible = "opensbi,domain,memregion";
+				base = <0x0 0x41000000>;
+				order = <24>; // 16MiB
+			};
+
+			allmem: allmem {
+				compatible = "opensbi,domain,memregion";
+				base = <0x0 0x0>;
+				order = <64>;
+			};
+
+			tdomain: trusted-domain {
+				compatible = "opensbi,domain,instance";
+				regions = <&allmem 0x3f>;
+				possible-harts = <&U74_1 &U74_2 &U74_3 &U74_4>;
+				boot-hart = <&U74_1>;
+				next-addr = <0x0 0x41000000>; /* optee_os: CFG_TDDRAM_START
+							       * u-boot  : CONFIG_SPL_OPTEE_IMAGE_LOAD_ADDR
+							       */
+				next-mode = <0x1>;
+			};
+
+			udomain: untrusted-domain {
+				compatible = "opensbi,domain,instance";
+				regions = <&tmem 0x0>, <&allmem 0x3f>;
+				possible-harts = <&U74_1 &U74_2 &U74_3 &U74_4>;
+				boot-hart = <&U74_1>;
+				next-addr = <0x0 0x40200000>; /* u-boot: CONFIG_TEXT_BASE */
+				next-mode = <0x1>;
+			};
+		};
+	};
+
+	sbi-mpxy-opteed {
+		opensbi-domain-instance = <&tdomain>;
+		riscv,sbi-mpxy-channel-id = <0x2>;
+		compatible = "riscv,sbi-mpxy-opteed";
 	};
 
 	firmware {
@@ -23,6 +64,22 @@
 	memory@40000000 {
 		bootph-pre-ram;
 	};
+};
+
+&U74_1 {
+	opensbi-domain = <&tdomain>;
+};
+
+&U74_2 {
+	opensbi-domain = <&tdomain>;
+};
+
+&U74_3 {
+	opensbi-domain = <&tdomain>;
+};
+
+&U74_4 {
+	opensbi-domain = <&tdomain>;
 };
 
 &uart0 {
